@@ -28,6 +28,9 @@ let allPacksData = {}; // Holds all pack drop rates from packs.json
 let isCardDragActive = false; // Flag to check if we're dragging a card
 let gameTickInterval = null; // Holds the timer that runs every second
 
+let fishingState = "idle"; // Can be: idle, waiting, bite, reeling
+let fishingTimeout = null; // Holds the timer for the fishing game
+
 
 // --- 2. CORE GAME FUNCTIONS ---
 
@@ -56,11 +59,9 @@ async function initGame() {
     // Step 3: Set up our navigation buttons.
     setupNavButtons();
 
-    // Step 4: Set up our test button (we'll remove this later).
-    setupTestButtons();
-
     initMuseum(); // Initialize museum
     initExpeditions(); // Initialize expeditions
+    initFishingMinigame(); // Initialize fishing minigame
     
     updateUI(); // Draw the UI (like the archive) with the loaded data
 
@@ -236,6 +237,7 @@ function updateUI() {
     updateArchiveUI();
     updateMuseumUI();
     updateExpeditionsUI();
+    updatePackInventoryUI();
     
     // Later, this will also call:
     // - updatePackCountUI()
@@ -447,27 +449,68 @@ function updateMuseumUI() {
     });
 }
 
+/**
+ * Updates the pack inventory display in the header and on the Packs panel.
+ */
+function updatePackInventoryUI() {
+    const headerArea = document.getElementById('header-pack-inventory');
+    const panelArea = document.getElementById('pack-opening-area');
+    
+    if (!headerArea || !panelArea) return; // Safety check
+
+    // Clear both areas
+    headerArea.innerHTML = '';
+    panelArea.innerHTML = '';
+
+    // Get the player's pack inventory
+    const inventory = gameState.player.packsInventory;
+
+    // Loop through each pack type we own
+    for (const packType in inventory) {
+        const count = inventory[packType];
+        
+        // 'basic' -> 'Basic'
+        const displayName = packType.charAt(0).toUpperCase() + packType.slice(1);
+
+        // Create the HTML for the display
+        const packHTML = `
+            <div classclass="pack-display ${count === 0 ? 'disabled' : ''}" 
+                 data-pack-type="${packType}">
+                <div class="pack-count">${count}</div>
+                <div class="pack-name">${displayName}</div>
+            </div>
+        `;
+        
+        // Add to both the header and the panel
+        headerArea.innerHTML += packHTML;
+        panelArea.innerHTML += packHTML;
+    }
+    
+    // Add click listeners to the buttons in the *panel*
+    panelArea.querySelectorAll('.pack-display').forEach(button => {
+        button.addEventListener('click', () => {
+            const packType = button.dataset.packType;
+            openPack(packType); // This will automatically check if count > 0
+        });
+    });
+}
 
 // --- 4. PACK OPENING LOGIC ---
-
-/**
- * Attaches a click listener to our test button.
- */
-function setupTestButtons() {
-    const testButton = document.getElementById('test-open-pack-btn');
-    if (testButton) {
-        testButton.addEventListener('click', () => {
-            console.log("Test button clicked!");
-            openPack('basic');
-        });
-    }
-}
 
 /**
  * Opens a pack, generates cards, and adds them to the player's inventory.
  * @param {string} packType - The key for the pack (e.g., "basic", "standard")
  */
 function openPack(packType) {
+    // Step 1: Check if player has this pack
+    if (gameState.player.packsInventory[packType] <= 0) {
+        console.warn(`Attempted to open pack "${packType}" with 0 in inventory.`);
+        return; // Stop the function
+    }
+
+    // Step 2: Subtract the pack from inventory
+    gameState.player.packsInventory[packType] -= 1;
+    
     console.log(`Opening pack: ${packType}`);
 
     // Get the rules for this pack type from our loaded data
@@ -478,38 +521,30 @@ function openPack(packType) {
     }
 
     const newCards = []; // An array to hold the cards we get
-    const cardsPerPack = 3; // All packs have 3 cards
+    const cardsPerPack = 3; 
 
     for (let i = 0; i < cardsPerPack; i++) {
-        // Step 1: Determine the rarity for this card
         const rarity = getRandomRarity(packRules);
-
-        // Step 2: Get a random card of that rarity
         const cardId = getRandomCardOfRarity(rarity);
-
-        // Step 3: For now, all new cards are "normal" variant
         const variant = "normal";
-
-        // Step 4: Add this new card to our list
         newCards.push({ cardId: cardId, variant: variant });
     }
 
-    // Now that we have our 3 new cards, add them to the player's inventory
+    // Add cards to inventory
     addCardsToInventory(newCards);
 
     // Update player progress
     gameState.player.packsOpened += 1;
-    // We'll update uniquesOwned later when we build the Archive
     
     // Save the game
     saveState();
 
-    // Update the UI
+    // Update the UI (this will refresh the pack counts and the archive)
     updateUI();
 
     // Log the results for testing
     console.log("Opened pack and received:", newCards);
-    alert(`You got 3 new cards! (Check the console to see them)`);
+    alert(`You opened a ${packType} pack and got 3 new cards! (Check the Archive)`);
 }
 
 /**
@@ -597,10 +632,23 @@ function getCardImagePath(cardId, variant) {
     return `images/cards/${cardId}.png`;
 }
 
-// --- 5. START THE GAME ---
-// This is the last line. It tells the browser to run our 'initGame'
-// function once the page and this script have finished loading.
-document.addEventListener('DOMContentLoaded', initGame);
+/**
+ * Adds a specified number of packs to the player's inventory.
+ * @param {string} packType - The key for the pack (e.g., "basic")
+ * @param {number} count - How many packs to add
+ */
+function addPackToInventory(packType, count) {
+    if (gameState.player.packsInventory.hasOwnProperty(packType)) {
+        gameState.player.packsInventory[packType] += count;
+        console.log(`Added ${count} "${packType}" pack(s) to inventory.`);
+    } else {
+        console.warn(`Unknown pack type: ${packType}`);
+    }
+    
+    // Save and update the UI to show the new pack count
+    saveState();
+    updateUI();
+}
 
 /*
 ================================================================================
@@ -798,3 +846,145 @@ function formatTime(ms) {
     // 'padStart' adds a leading '0' if the number is less than 10
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
+
+/*
+================================================================================
+SECTION 6: MINIGAMES (FISHING)
+================================================================================
+*/
+
+/**
+ * Sets up the click listener for the fishing button.
+ */
+function initFishingMinigame() {
+    const button = document.getElementById('fishing-button');
+    if (button) {
+        button.addEventListener('click', handleFishingClick);
+    }
+}
+
+/**
+ * Handles all clicks on the main fishing button.
+ * It's a "state machine" that behaves differently based on 'fishingState'.
+ */
+function handleFishingClick() {
+    switch (fishingState) {
+        case "idle":
+            startFishing();
+            break;
+        case "waiting":
+            // Player clicked too early, do nothing, maybe a "splash"
+            console.log("Clicked too early!");
+            break;
+        case "bite":
+            reelInFish();
+            break;
+    }
+}
+
+/**
+ * Starts the fishing "waiting" game.
+ */
+function startFishing() {
+    fishingState = "waiting";
+    
+    // Update UI
+    const button = document.getElementById('fishing-button');
+    const status = document.getElementById('fishing-status');
+    
+    button.disabled = true;
+    button.textContent = "Waiting...";
+    status.textContent = "Shh... waiting for a bite.";
+
+    // Clear any old timer
+    if (fishingTimeout) clearTimeout(fishingTimeout);
+    
+    // Set a timer for the "bite"
+    // Random time between 3 and 8 seconds
+    const waitTime = Math.random() * 5000 + 3000; 
+    fishingTimeout = setTimeout(showFishBite, waitTime);
+}
+
+/**
+ * The "bite" appears!
+ */
+function showFishBite() {
+    fishingState = "bite";
+    
+    // Update UI
+    const button = document.getElementById('fishing-button');
+    const status = document.getElementById('fishing-status');
+    
+    button.disabled = false;
+    button.textContent = "Reel In!";
+    button.classList.add('claim-button'); // Make it green
+    status.textContent = "BITE!";
+
+    // Clear any old timer
+    if (fishingTimeout) clearTimeout(fishingTimeout);
+    
+    // Set a "get away" timer. Player has 2 seconds to click.
+    fishingTimeout = setTimeout(fishGotAway, 2000); 
+}
+
+/**
+ * Player clicked the "Reel In" button in time!
+ */
+function reelInFish() {
+    fishingState = "reeling"; // Temporary state
+    
+    // Update UI
+    const button = document.getElementById('fishing-button');
+    const status = document.getElementById('fishing-status');
+
+    button.disabled = true;
+    button.textContent = "Caught!";
+    status.textContent = "You caught... a Basic Pack!";
+
+    // Clear the "get away" timer
+    if (fishingTimeout) clearTimeout(fishingTimeout);
+    
+    // Give the reward
+    // For now, it's always one basic pack.
+    addPackToInventory('basic', 1);
+
+    // Reset the game after a short delay
+    setTimeout(resetFishingGame, 2000); // 2-second delay to read "Caught!"
+}
+
+/**
+ * Player was too slow and the fish got away.
+ */
+function fishGotAway() {
+    fishingState = "idle"; // Reset
+    
+    // Update UI
+    const button = document.getElementById('fishing-button');
+    const status = document.getElementById('fishing-status');
+
+    button.disabled = false;
+    button.textContent = "Cast";
+    button.classList.remove('claim-button');
+    status.textContent = "Oh... it got away. Try again!";
+}
+
+/**
+ * Resets the fishing game to its idle state.
+ */
+function resetFishingGame() {
+    fishingState = "idle";
+    
+    const button = document.getElementById('fishing-button');
+    const status = document.getElementById('fishing-status');
+    
+    button.disabled = false;
+    button.textContent = "Cast";
+    button.classList.remove('claim-button');
+    status.textContent = ""; // Clear status
+}
+
+
+// --- 5. START THE GAME ---
+// This is the last line. It tells the browser to run our 'initGame'
+// function once the page and this script have finished loading.
+document.addEventListener('DOMContentLoaded', initGame);
