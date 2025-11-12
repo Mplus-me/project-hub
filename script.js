@@ -19,6 +19,17 @@ Phase 2: The Core Loop
  * @property {Array<Object>} inventory.cards
  */
 
+// NEW: This is our single source of truth for rarities.
+// Ordered from RAREST to MOST COMMON.
+const RARITY_ORDER = [
+    "special",
+    "legendary",
+    "mythic",
+    "rare",
+    "uncommon",
+    "common"
+];
+
 /** @type {GameState} */
 let gameState = {}; // Holds the player's save data (packs, cards, etc.)
 
@@ -549,20 +560,31 @@ function openPack(packType) {
 
 /**
  * Helper function: Chooses a rarity based on pack drop rates.
- * @param {Object} packRules - The drop rate object (e.g., { common: 80, uncommon: 15, rare: 5 })
- * @returns {string} - The chosen rarity ("common", "uncommon", or "rare")
+ * This is now data-driven and uses the RARITY_ORDER constant.
+ * @param {Object} packRules - The drop rate object (e.g., { common: 80, rare: 5, ... })
+ * @returns {string} - The chosen rarity ("common", "uncommon", "mythic", etc.)
  */
 function getRandomRarity(packRules) {
     const roll = Math.random() * 100; // Get a random number 0-99.99...
+    let cumulativeChance = 0;
 
-    // We check from rarest to most common
-    if (roll < packRules.rare) {
-        return "rare"; // e.g., if roll is 4.5, and rare is 5, you get a rare
-    } else if (roll < packRules.rare + packRules.uncommon) {
-        return "uncommon"; // e.g., if rare is 5, uncommon is 15. Roll 12. 12 < (5+15).
-    } else {
-        return "common"; // The rest is common
+    // We loop from RAREST to COMMON
+    for (const rarity of RARITY_ORDER) {
+        // Get the chance for this rarity, defaulting to 0 if not in the pack
+        const chance = packRules[rarity] || 0;
+        
+        // Add it to our cumulative total
+        cumulativeChance += chance;
+
+        // If our roll is less than the cumulative total, we hit this rarity
+        if (roll < cumulativeChance) {
+            return rarity;
+        }
     }
+
+    // Failsafe: if something goes wrong (e.g., chances don't add to 100),
+    // default to the most common rarity (the last item in our array).
+    return RARITY_ORDER[RARITY_ORDER.length - 1]; // "common"
 }
 
 /**
