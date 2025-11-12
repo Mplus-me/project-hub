@@ -1,0 +1,182 @@
+{
+  "rock-001": {
+    "name": "River Pebble",
+    "rarity": "common",
+    "region": "riverbed",
+    "flavor": "A smooth, gray stone, worn by water and time."
+  },
+  "rock-002": {
+    "name": "Sharp Flint",
+    "rarity": "common",
+    "region": "grassland",
+    "flavor": "Used by early ancestors to make tools."
+  },
+  "rock-003": {
+    "name": "Chunk of Granite",
+    "rarity": "common",
+    "region": "mountain",
+    "flavor": "Speckled with quartz and feldspar."
+  },
+  "rock-004": {
+    "name": "Slate Shard",
+    "rarity": "common",
+    "region": "mountain",
+    "flavor": "Breaks into flat, thin layers."
+  },
+  "rock-005": {
+    "name": "Sandstone",
+    "rarity": "common",
+    "region": "desert",
+    "flavor": "Feels like rough sand, because it is."
+  },
+  "rock-006": {
+    "name": "Pumice",
+    "rarity": "common",
+    "region": "volcanic",
+    "flavor": "The only rock that floats on water."
+  },
+  "rock-007": {
+    "name": "Small Geode",
+    "rarity": "uncommon",
+    "region": "cave",
+    "flavor": "A plain rock on the outside, full of crystals."
+  },
+  "rock-008": {
+    "name": "Obsidian",
+    "rarity": "uncommon",
+    "region": "volcanic",
+    "flavor": "Natural volcanic glass. Very sharp."
+  },
+  "rock-009": {
+    "name": "Rose Quartz",
+    "rarity": "uncommon",
+    "region": "cave",
+    "flavor": "A cloudy pink crystal associated with love."
+  },
+  "rock-010": {
+    "name": "Pyrite",
+    "rarity": "uncommon",
+    "region": "mountain",
+    "flavor": "Also known as 'Fool's Gold'."
+  },
+  "rock-011": {
+    "name": "Amethyst",
+    "rarity": "rare",
+    "region": "cave",
+    "flavor": "A brilliant purple crystal said to calm the mind."
+  },
+  "rock-012": {
+    "name": "Lapis Lazuli",
+    "rarity": "rare",
+    "region": "mountain",
+    "flavor": "A deep blue stone used for pigment by royalty."
+  },
+  "rock-013": {
+    "name": "Opal",
+    "rarity": "rare",
+    "region": "desert",
+    "flavor": "Catches the light with a fiery, internal rainbow."
+  },
+  "rock-014": {
+    "name": "Meteorite Fragment",
+    "rarity": "rare",
+    "region": "cosmic",
+    "flavor": "A visitor from the stars. Feels heavy."
+  },
+  "rock-015": {
+    "name": "Basalt",
+    "rarity": "common",
+    "region": "volcanic",
+    "flavor": "The dark, dense rock that forms volcanic islands."
+  },
+  "rock-016": {
+    "name": "Limestone",
+    "rarity": "common",
+    "region": "coast",
+    "flavor": "Often contains tiny, fossilized sea creatures."
+  },
+  "rock-017": {
+    "name": "Gneiss",
+    "rarity": "common",
+    "region": "mountain",
+    "flavor": "A metamorphic rock with distinct wavy bands."
+  },
+  "rock-018": {
+    "name": "Mica",
+    "rarity": "uncommon",
+    "region": "mountain",
+    "flavor": "Splits into paper-thin, shiny sheets."
+  },
+  "rock-019": {
+    "name": "Turquoise",
+    "rarity": "uncommon",
+    "region": "desert",
+    "flavor": "A striking blue-green mineral."
+  },
+  "rock-020": {
+    "name": "Garnet",
+    "rarity": "uncommon",
+    "region": "riverbed",
+    "flavor": "A deep red gemstone, often found in riverbeds."
+  },
+  "rock-021": {
+    "name": "Peridot",
+    "rarity": "rare",
+    "region": "volcanic",
+    "flavor": "A bright green gem born in fire."
+  },
+  "rock-022": {
+    "name":"Malachite",
+    "rarity": "uncommon",
+    "region": "cave",
+    "flavor": "Forms in beautiful, swirling green patterns."
+  },
+  "rock-023": {
+    "name": "Sunstone",
+    "rarity": "uncommon",
+    "region": "grassland",
+    "flavor": "Contains tiny copper flakes that glitter in the sun."
+  },
+  "rock-024": {
+    "name": "Moonstone",
+    "rarity": "rare",
+    "region": "grassland",
+    "flavor": "Shines with a soft, pearly, blueish light."
+  },
+  "rock-025": {
+    "name": "Petrified Wood",
+    "rarity": "uncommon",
+    "region": "forest",
+    "flavor": "A tree that turned to stone over millions of years."
+  },
+  "rock-026": {
+    "name": "Amber",
+    "rarity": "uncommon",
+    "region": "forest",
+    "flavor": "Fossilized tree resin. Sometimes traps insects."
+  },
+  "rock-027": {
+    "name": "Sea Glass",
+    "rarity": "common",
+    "region": "coast",
+    "flavor": "Man-made glass, tumbled smooth by the ocean."
+  },
+  "rock-028": {
+    "name": "Abalone Shell",
+    "rarity": "uncommon",
+    "region": "coast",
+    "flavor": "The iridescent inner-shell of a sea snail."
+  },
+  "rock-029": {
+    "name": "Diamond (Raw)",
+    "rarity": "rare",
+    "region": "cave",
+    "flavor": "The hardest natural substance known."
+  },
+  "rock-030": {
+    "name": "Rainbow Obsidian",
+    "rarity": "rare",
+    "region": "volcanic",
+    "flavor": "An obsidian variant that reveals colored layers."
+  }
+}
