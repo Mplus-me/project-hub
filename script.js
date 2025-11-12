@@ -53,7 +53,7 @@ async function initGame() {
     // Step 4: Set up our test button (we'll remove this later).
     setupTestButtons();
 
-    // Step 5: Update UI
+    initMuseum(); // Initialize museum
     updateUI(); // Draw the UI (like the archive) with the loaded data
     
     console.log("Game initialized successfully.");
@@ -178,8 +178,8 @@ function showPanel(panelId) {
 function updateUI() {
     console.log("Updating UI...");
     
-    // Update the card grid in the Archive
     updateArchiveUI();
+    updateMuseumUI();
     
     // Later, this will also call:
     // - updatePackCountUI()
