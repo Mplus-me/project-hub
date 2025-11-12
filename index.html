@@ -10,6 +10,9 @@
 
     <header class="game-header">
         <h1>My Cozy Rocks</h1>
+
+        <div id="header-pack-inventory" class="pack-inventory">
+            </div>
     </header>
 
     <div class="app-container">
@@ -50,10 +53,22 @@
             </div>
 
             <div id="packs-panel" class="panel">
-                <h2>Packs</h2>
-                <p>Open packs and convert duplicates here.</p>
+                
+                <div class="pack-section">
+                    <h2>Open Packs</h2>
+                    <p>Click a pack to open it.</p>
+                    <div id="pack-opening-area" class="pack-inventory">
+                        </div>
+                </div>
 
-                <button id="test-open-pack-btn" class="game-button">Test: Open Basic Pack</button>
+                <div class="pack-section">
+                    <h2>Convert Duplicates</h2>
+                    <p>(Coming soon: Trade your extra cards for new packs)</p>
+                    <div id="duplicate-conversion-area">
+                        <button class="game-button" disabled>Convert (Soon)</button>
+                    </div>
+                </div>
+
             </div>
 
             <div id="expeditions-panel" class="panel">
@@ -66,10 +81,20 @@
                         </div>
                 </div>
 
-                <div id="minigame-section">
+               <div id="minigame-section">
                     <h3>Minigames</h3>
-                    <p>(Coming soon: a cozy fishing game)</p>
+                    <p>Play a short game to earn a pack.</p>
+                    
+                    <div id="fishing-minigame" class="minigame-container">
+                        <h4>Cozy Fishing</h4>
+                        <p>Click to cast. When you see "!", click again to reel it in!</p>
+                        
+                        <div id="fishing-pond">
+                            <button id="fishing-button" class="game-button">Cast</button>
+                            <div id="fishing-status" class="status"></div>
+                        </div>
                     </div>
+                </div>
             </div>
 
         </main>
