@@ -78,3 +78,88 @@ h1, h2 {
     transform: scale(0.95);
     border-color: #D95525;
 }
+
+/* --- 5. Archive Panel Styles --- */
+.card-grid {
+    display: grid;
+    /* This creates a responsive grid that fits as many 120px cards as it can */
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.card-in-grid {
+    background-color: #E0DAB9;
+    border: 3px solid #C9C1A5; /* Default border */
+    border-radius: 8px;
+    padding: 5px;
+    text-align: center;
+    font-size: 14px;
+    
+    /* Add a subtle shadow to make cards pop */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* --- Rarity Border Colors --- */
+/* We use the rarity from cards.json to color the borders */
+.card-in-grid.rarity-common { border-color: #C9C1A5; }
+.card-in-grid.rarity-uncommon { border-color: #88a236; } /* Mossy Green */
+.card-in-grid.rarity-rare { border-color: #9b59b6; } /* Amethyst Purple */
+
+
+/* --- Card Image Placeholder --- */
+/* This is our placeholder for the card image */
+.card-image-placeholder {
+    width: 100%;
+    height: 100px; /* Give it a set height */
+    background-color: #f7f7f7; /* A very light gray */
+    border: 1px dashed #C9C1A5;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    
+    /* This part hides the broken image icon if the image 404s */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.card-image-placeholder img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Will scale the image down if it's too big */
+    
+    /* Hides the 'alt' text and broken image icon if it fails to load */
+    color: transparent; 
+    font-size: 0;
+}
+
+/* --- Card Info (Name & Count) --- */
+.card-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2px;
+}
+
+.card-name {
+    font-size: 13px;
+    color: #3D405B;
+    /* Prevents long names from breaking the layout */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-count {
+    font-size: 14px;
+    font-weight: bold;
+    color: #D95525; /* Our cozy rust color */
+    margin-left: 5px;
+    
+    /* Adds a nice little circle background */
+    background-color: #fff;
+    border-radius: 50%;
+    padding: 1px 4px;
+    min-width: 20px;
+}
