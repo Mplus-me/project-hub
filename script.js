@@ -52,6 +52,9 @@ async function initGame() {
 
     // Step 4: Set up our test button (we'll remove this later).
     setupTestButtons();
+
+    // Step 5: Update UI
+    updateUI(); // Draw the UI (like the archive) with the loaded data
     
     console.log("Game initialized successfully.");
     console.log("Current Game State:", gameState);
@@ -161,15 +164,62 @@ function showPanel(panelId) {
 }
 
 /**
- * This function will be used later to update all parts of the UI
- * (like the pack counters, card grid, etc.)
+ * This function is our main "refresh" function. It updates all parts
+ * of the UI to reflect the current gameState.
  */
 function updateUI() {
-    console.log("UI Updated (placeholder)");
-    // Later, this will call other functions like:
+    console.log("Updating UI...");
+    
+    // Update the card grid in the Archive
+    updateArchiveUI();
+    
+    // Later, this will also call:
     // - updatePackCountUI()
-    // - updateArchiveUI()
     // - updateProgressBars()
+}
+
+/**
+ * Draws all the player's cards into the Archive panel grid.
+ */
+function updateArchiveUI() {
+    const grid = document.getElementById('archive-grid');
+    if (!grid) return; // Safety check
+
+    // Clear the grid before redrawing all cards
+    grid.innerHTML = ''; 
+
+    // Loop through the player's inventory
+    gameState.inventory.cards.forEach(card => {
+        // Get the card's master data (name, rarity, etc.) from allCardsData
+        const cardData = allCardsData[card.cardId];
+        if (!cardData) {
+            console.warn(`Missing card data for ID: ${card.cardId}`);
+            return; // Skip this card if data is missing
+        }
+
+        // Create the card element
+        const cardElement = document.createElement('div');
+        cardElement.classList.add('card-in-grid');
+        // Add rarity as a class for styling (e.g., "rarity-common")
+        cardElement.classList.add(`rarity-${cardData.rarity}`); 
+
+        // Get the image path
+        const imgPath = getCardImagePath(card.cardId, card.variant);
+
+        // Create the HTML for the card
+        cardElement.innerHTML = `
+            <div class="card-image-placeholder">
+                <img src="${imgPath}" alt="${cardData.name}">
+            </div>
+            <div class="card-info">
+                <span class="card-name">${cardData.name}</span>
+                <span class="card-count">x${card.count}</span>
+            </div>
+        `;
+        
+        // Add the new card element to the grid
+        grid.appendChild(cardElement);
+    });
 }
 
 
@@ -276,23 +326,51 @@ function getRandomCardOfRarity(rarity) {
 
 /**
  * Helper function: Adds an array of new cards to the player's inventory.
- * This function is simple now, but will get smarter when we add duplicates.
+ * This function now correctly stacks duplicates.
  * @param {Array<Object>} newCards - e.g., [{cardId: "rock-001", variant: "normal"}]
  */
 function addCardsToInventory(newCards) {
-    // For now, we just push the new cards into the inventory array.
-    // In Phase 3, we'll modify this to handle stacking duplicates.
-    newCards.forEach(card => {
-        // NOTE: This logic is a placeholder. We will improve it in Phase 3
-        // to properly stack duplicates.
-        gameState.inventory.cards.push({
-            cardId: card.cardId,
-            variant: card.variant,
-            count: 1 // For now, every card is unique
-        });
+    const inventory = gameState.inventory.cards;
+
+    newCards.forEach(newCard => {
+        // Check if this exact card (id AND variant) is already in our inventory
+        const existingCard = inventory.find(card => 
+            card.cardId === newCard.cardId && card.variant === newCard.variant
+        );
+
+        if (existingCard) {
+            // If it exists, just increment the count
+            existingCard.count += 1;
+            console.log(`Stacked duplicate: ${newCard.cardId} (${newCard.variant})`);
+        } else {
+            // If it's new, add it to the inventory with a count of 1
+            inventory.push({
+                cardId: newCard.cardId,
+                variant: newCard.variant,
+                count: 1
+            });
+            console.log(`Added new card: ${newCard.cardId} (${newCard.variant})`);
+        }
     });
+    
+    // We will update uniquesOwned count here later
 }
 
+/**
+ * Gets the correct image path for a card based on its ID and variant.
+ * @param {string} cardId - The ID of the card (e.g., "rock-001")
+ * @param {string} variant - The variant ("normal", "foil", "alt")
+ * @returns {string} - The relative path to the image
+ */
+function getCardImagePath(cardId, variant) {
+    // For now, this is simple.
+    // In the future, we'll add logic here to handle "alt" variants
+    // (e.g., if variant === 'alt', return `images/cards/${cardId}-alt.png`)
+    
+    // All cards, regardless of variant, use the base image path for now.
+    // The "foil" effect will be a CSS overlay we add later.
+    return `images/cards/${cardId}.png`;
+}
 
 // --- 5. START THE GAME ---
 // This is the last line. It tells the browser to run our 'initGame'
