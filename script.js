@@ -474,7 +474,7 @@ function updatePackInventoryUI() {
 
         // Create the HTML for the display
         const packHTML = `
-            <div classclass="pack-display ${count === 0 ? 'disabled' : ''}" 
+            <div class="pack-display ${count === 0 ? 'disabled' : ''}" 
                  data-pack-type="${packType}">
                 <div class="pack-count">${count}</div>
                 <div class="pack-name">${displayName}</div>
