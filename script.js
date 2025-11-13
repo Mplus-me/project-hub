@@ -513,15 +513,21 @@ function updatePackInventoryUI() {
 
     // Loop through each pack type we own
     for (const packType in inventory) {
+        if (!inventory.hasOwnProperty(packType)) continue; // Safety check
+        
         const count = inventory[packType];
         
         // 'basic' -> 'Basic'
         const displayName = packType.charAt(0).toUpperCase() + packType.slice(1);
 
         // Create the HTML for the display
+        // THIS IS THE MODIFIED PART: Added the <img> tag
         const packHTML = `
             <div class="pack-display ${count === 0 ? 'disabled' : ''}" 
                  data-pack-type="${packType}">
+                
+                <img src="images/ui/pack-${packType}.png" alt="${displayName} Pack" class="pack-icon">
+                
                 <div class="pack-count">${count}</div>
                 <div class="pack-name">${displayName}</div>
             </div>
