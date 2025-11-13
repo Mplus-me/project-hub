@@ -260,6 +260,22 @@ function loadState() {
     }
 }
 
+/**
+ * Calculates how many unique card IDs the player owns.
+ * Ignores variants (foil/alt) and duplicates.
+ * @returns {number}
+ */
+function getUniqueCardCount() {
+    const inventory = gameState.inventory.cards;
+    const uniqueIds = new Set(); // A Set automatically removes duplicates
+    
+    inventory.forEach(card => {
+        uniqueIds.add(card.cardId);
+    });
+    
+    return uniqueIds.size;
+}
+
 
 // --- 3. NAVIGATION & UI FUNCTIONS ---
 
@@ -338,6 +354,7 @@ function updateUI() {
     updateExpeditionsUI();
     updatePackInventoryUI();
     updateConverterUI();
+    updateProgressionUI();
     
     // Later, this will also call:
     // - updatePackCountUI()
@@ -599,6 +616,26 @@ function updatePackInventoryUI() {
             openPack(packType); // This will automatically check if count > 0
         });
     });
+}
+
+/**
+ * Updates the text stats on the Archive and Packs panels.
+ */
+function updateProgressionUI() {
+    // 1. Update Archive Stat
+    const uniqueCountEl = document.getElementById('unique-count-display');
+    if (uniqueCountEl) {
+        const count = getUniqueCardCount();
+        uniqueCountEl.textContent = `Unique Rocks Found: ${count}`;
+    }
+
+    // 2. Update Packs Stat
+    const packsOpenedEl = document.getElementById('packs-opened-display');
+    if (packsOpenedEl) {
+        // Default to 0 if undefined
+        const count = gameState.player.packsOpened || 0; 
+        packsOpenedEl.textContent = `Total Packs Opened: ${count}`;
+    }
 }
 
 // --- 4. PACK OPENING LOGIC ---
