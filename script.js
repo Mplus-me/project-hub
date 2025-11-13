@@ -19,7 +19,7 @@ Phase 2: The Core Loop
  * @property {Array<Object>} inventory.cards
  */
 
-// NEW: This is our single source of truth for rarities.
+// This is our single source of truth for rarities.
 // Ordered from RAREST to MOST COMMON.
 const RARITY_ORDER = [
     "special",
@@ -50,7 +50,7 @@ const PACK_THRESHOLDS = [
     { name: "basic", points: 10 }
 ];
 
-// NEW: Database for our 3 unique expedition slots
+// Database for our 3 unique expedition slots
 const EXPEDITION_DATA = [
     // Slot 0
     {
@@ -82,6 +82,26 @@ const EXPEDITION_DATA = [
         bonusChance: 5,
         image: "images/expeditions/exp-long.png"
     }
+]
+
+// Loot table for the fishing minigame.
+// Must be ordered from RAREST to MOST COMMON reward.
+const FISHING_REWARDS = [
+    { type: "pack", packType: "advanced", chance: 1 },  // 1%
+    { type: "pack", packType: "explorer", chance: 4 },  // 4% (Cumulative: 5%)
+    { type: "pack", packType: "basic", chance: 35 }, // 35% (Cumulative: 40%)
+    { type: "card", region: "riverbed", chance: 30 }, // 30% (Cumulative: 70%)
+    { type: "none", message: "An old boot...", chance: 30 }  // 30% (Cumulative: 100%)
+];
+
+// Rarity chances for finding a "wild" card (e.g., from fishing)
+// Must be ordered from RAREST to MOST COMMON.
+const WILD_RARITY_CHANCE = [
+    { rarity: "legendary", chance: 0.2 }, // 1 in 500
+    { rarity: "mythic", chance: 0.5 },    // 1 in 200 (Cumulative: 0.7%)
+    { rarity: "rare", chance: 9.3 },      // (Cumulative: 10%)
+    { rarity: "uncommon", chance: 20 },   // (Cumulative: 30%)
+    { rarity: "common", chance: 70 }      // (Cumulative: 100%)
 ];
 
 /** @type {GameState} */
@@ -682,6 +702,56 @@ function getRandomCardOfRarity(rarity) {
 }
 
 /**
+ * Helper function: Gets a random card ID matching a region AND a rarity.
+ * This is used for "wild" card finds, like from fishing.
+ * @param {string} region - The region to filter by (e.g., "riverbed")
+ * @returns {string | null} - The chosen card ID (e.g., "rock-001"), or null
+ */
+function getRandomCardOfRegion(region) {
+    // --- Step 1: Determine the Rarity ---
+    const roll = Math.random() * 100;
+    let cumulativeChance = 0;
+    let chosenRarity = "common"; // Default
+
+    for (const rarityInfo of WILD_RARITY_CHANCE) {
+        cumulativeChance += rarityInfo.chance;
+        if (roll < cumulativeChance) {
+            chosenRarity = rarityInfo.rarity;
+            break;
+        }
+    }
+
+    // --- Step 2: Find a card that matches BOTH region AND rarity ---
+    const allCardIds = Object.keys(allCardsData);
+    const validCardIds = allCardIds.filter(id => {
+        return allCardsData[id].region === region &&
+               allCardsData[id].rarity === chosenRarity;
+    });
+
+    if (validCardIds.length > 0) {
+        // We found a match! (e.g., a "common" "riverbed" card)
+        const randomIndex = Math.floor(Math.random() * validCardIds.length);
+        return validCardIds[randomIndex];
+    } else {
+        // --- Step 3: Failsafe ---
+        // What if no "common" "riverbed" card exists?
+        // Fall back to *any* card from that region, so the player still gets something.
+        console.warn(`No card found for ${chosenRarity} in ${region}. Falling back to any.`);
+        
+        const anyRegionCardIds = allCardIds.filter(id => allCardsData[id].region === region);
+        
+        if (anyRegionCardIds.length > 0) {
+            const randomIndex = Math.floor(Math.random() * anyRegionCardIds.length);
+            return anyRegionCardIds[randomIndex];
+        } else {
+            // Absolute failsafe, should never happen
+            console.error(`No cards found for region: ${region}`);
+            return null;
+        }
+    }
+}
+
+/**
  * Helper function: Adds an array of new cards to the player's inventory.
  * This function now correctly stacks duplicates.
  * @param {Array<Object>} newCards - e.g., [{cardId: "rock-001", variant: "normal"}]
@@ -1024,8 +1094,8 @@ function handleFishingClick() {
             startFishing();
             break;
         case "waiting":
-            // Player clicked too early, do nothing, maybe a "splash"
-            console.log("Clicked too early!");
+            // Player clicked too early!
+            failFishing();
             break;
         case "bite":
             reelInFish();
@@ -1043,7 +1113,7 @@ function startFishing() {
     const button = document.getElementById('fishing-button');
     const status = document.getElementById('fishing-status');
     
-    button.disabled = true;
+    // We no longer disable the button
     button.textContent = "Waiting...";
     status.textContent = "Shh... waiting for a bite.";
 
@@ -1051,9 +1121,29 @@ function startFishing() {
     if (fishingTimeout) clearTimeout(fishingTimeout);
     
     // Set a timer for the "bite"
-    // Random time between 3 and 8 seconds
-    const waitTime = Math.random() * 5000 + 3000; 
+    const waitTime = Math.random() * 5000 + 3000; // 3-8 seconds
     fishingTimeout = setTimeout(showFishBite, waitTime);
+}
+
+/**
+ * Player clicked while "waiting" and scared the fish.
+ */
+function failFishing() {
+    fishingState = "idle"; // Reset
+    
+    // Clear the "bite" timer
+    if (fishingTimeout) clearTimeout(fishingTimeout);
+    
+    // Update UI
+    const button = document.getElementById('fishing-button');
+    const status = document.getElementById('fishing-status');
+
+    button.disabled = false;
+    button.textContent = "Cast";
+    status.textContent = "You clicked too early and scared it away!";
+    
+    // Reset the game after a short delay
+    setTimeout(resetFishingGame, 2000); // 2-second delay
 }
 
 /**
@@ -1084,23 +1174,54 @@ function showFishBite() {
 function reelInFish() {
     fishingState = "reeling"; // Temporary state
     
+    // Clear the "get away" timer
+    if (fishingTimeout) clearTimeout(fishingTimeout);
+
     // Update UI
     const button = document.getElementById('fishing-button');
     const status = document.getElementById('fishing-status');
 
     button.disabled = true;
     button.textContent = "Caught!";
-    status.textContent = "You caught... a Basic Pack!";
-
-    // Clear the "get away" timer
-    if (fishingTimeout) clearTimeout(fishingTimeout);
     
-    // Give the reward
-    // For now, it's always one basic pack.
-    addPackToInventory('basic', 1);
+    // --- Generate the Reward ---
+    const reward = generateFishingReward();
+    let statusMessage = "";
+
+    switch (reward.type) {
+        case "pack":
+            addPackToInventory(reward.packType, 1);
+            statusMessage = `You caught... a ${reward.packType} Pack!`;
+            break;
+        
+        case "card":
+            // This now uses our new, rarity-controlled function!
+            const cardId = getRandomCardOfRegion(reward.region); 
+            if (cardId) {
+                const cardData = allCardsData[cardId];
+                addCardsToInventory([{ cardId: cardId, variant: "normal" }]);
+                statusMessage = `You found a ${cardData.name}!`;
+            } else {
+                statusMessage = "You found... nothing this time.";
+            }
+            break;
+            
+        case "none":
+        default:
+            statusMessage = `You reeled in... ${reward.message}`;
+            break;
+    }
+
+    status.textContent = statusMessage;
+    
+    // Save the game (if a pack or card was added)
+    if (reward.type !== "none") {
+        saveState();
+        updateUI(); // This is needed to refresh pack counts / archive
+    }
 
     // Reset the game after a short delay
-    setTimeout(resetFishingGame, 2000); // 2-second delay to read "Caught!"
+    setTimeout(resetFishingGame, 2500); // Longer delay to read reward
 }
 
 /**
@@ -1117,6 +1238,25 @@ function fishGotAway() {
     button.textContent = "Cast";
     button.classList.remove('claim-button');
     status.textContent = "Oh... it got away. Try again!";
+}
+
+/**
+ * Rolls on the FISHING_REWARDS table to get a random reward.
+ * @returns {Object} - A reward object from the loot table
+ */
+function generateFishingReward() {
+    const roll = Math.random() * 100; // Get a random number 0-99.99...
+    let cumulativeChance = 0;
+
+    for (const reward of FISHING_REWARDS) {
+        cumulativeChance += reward.chance;
+        if (roll < cumulativeChance) {
+            return reward;
+        }
+    }
+    
+    // Failsafe in case table doesn't add to 100
+    return FISHING_REWARDS[FISHING_REWARDS.length - 1]; 
 }
 
 /**
