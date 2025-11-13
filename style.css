@@ -465,3 +465,49 @@ h1, h2 {
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
+/* --- 13. Placeholder Image Styles --- */
+
+/* Placeholder for the main game title */
+#game-title-logo {
+    width: 250px;
+    height: 60px; /* Taller than the 40px header padding */
+    background-color: #E0DAB9; /* Light tan */
+    border: 2px dashed #C9C1A5;
+    border-radius: 8px;
+    
+    /* This vertically centers the 60px logo in the 80px header */
+    margin: -10px 0; 
+}
+
+/* Placeholder for the pack icons */
+.pack-icon {
+    width: 50px;
+    height: 50px;
+    background-color: #C9C1A5; /* Darker tan */
+    border: 2px solid #E0DAB9;
+    border-radius: 5px;
+    margin: 0 auto 5px auto; /* Center it above the text */
+    
+    /* Hides broken image icon if it fails to load */
+    display: block;
+    overflow: hidden;
+    color: transparent;
+    font-size: 0;
+}
+
+/* Placeholder for the fishing pond */
+#fishing-pond {
+    margin-top: 10px;
+    padding: 20px;
+    background-color: #a2c5d1; /* Cozy pond blue */
+    border-radius: 5px;
+    text-align: center;
+    
+    /* ADD THIS: Placeholder background image */
+    background-image: url('images/ui/fishing-pond-bg.png');
+    background-size: cover;
+    background-position: center;
+    border: 3px solid #7a9ca7;
+    min-height: 150px;
+}
