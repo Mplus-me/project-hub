@@ -7,7 +7,7 @@
     "legendary": 0,
     "special": 0
   },
-  "standard": {
+  "explorer": {
     "common": 50,
     "uncommon": 35,
     "rare": 13,
@@ -15,7 +15,7 @@
     "legendary": 0,
     "special": 0
   },
-  "premium": {
+  "advanced": {
     "common": 20,
     "uncommon": 40,
     "rare": 25,
@@ -23,7 +23,15 @@
     "legendary": 5,
     "special": 0
   },
-  "curated": {
+  "deluxe": {
+    "common": 0,
+    "uncommon": 40,
+    "rare": 30,
+    "mythic": 20,
+    "legendary": 10,
+    "special": 0
+  }
+  "collector": {
     "common": 0,
     "uncommon": 40,
     "rare": 30,
