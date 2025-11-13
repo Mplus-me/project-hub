@@ -43,9 +43,10 @@ const CONVERSION_POINTS = {
 // Point thresholds for each pack
 // We list them from best to worst
 const PACK_THRESHOLDS = [
-    { name: "curated", points: 250 },
-    { name: "premium", points: 100 },
-    { name: "standard", points: 30 },
+    { name: "collector", points: 1000 },
+    { name: "deluxe", points: 250 },
+    { name: "advanced", points: 100 },
+    { name: "explorer", points: 30 },
     { name: "basic", points: 10 }
 ];
 
@@ -188,7 +189,7 @@ function loadState() {
             player: {
                 packsOpened: 0,
                 uniquesOwned: 0,
-                packsInventory: { basic: 5, standard: 1, premium: 0, curated: 0 }
+                packsInventory: { basic: 3, explorer: 1, advanced: 0, deluxe: 0, collector: 0 }
             },
             inventory: {
                 cards: []
