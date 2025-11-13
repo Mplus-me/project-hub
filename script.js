@@ -50,6 +50,40 @@ const PACK_THRESHOLDS = [
     { name: "basic", points: 10 }
 ];
 
+// NEW: Database for our 3 unique expedition slots
+const EXPEDITION_DATA = [
+    // Slot 0
+    {
+        name: "Short Expedition",
+        durationMs: 5 * 60 * 1000, // 5 minutes
+        durationText: "5m",
+        basePack: "basic",
+        bonusPack: "explorer",
+        bonusChance: 5, // 5%
+        image: "images/expeditions/exp-short.png"
+    },
+    // Slot 1
+    {
+        name: "Medium Expedition",
+        durationMs: 60 * 60 * 1000, // 60 minutes
+        durationText: "1h",
+        basePack: "explorer",
+        bonusPack: "advanced",
+        bonusChance: 5,
+        image: "images/expeditions/exp-medium.png"
+    },
+    // Slot 2
+    {
+        name: "Long Expedition",
+        durationMs: 8 * 60 * 60 * 1000, // 8 hours
+        durationText: "8h",
+        basePack: "advanced",
+        bonusPack: "deluxe",
+        bonusChance: 5,
+        image: "images/expeditions/exp-long.png"
+    }
+];
+
 /** @type {GameState} */
 let gameState = {}; // Holds the player's save data (packs, cards, etc.)
 
@@ -762,7 +796,8 @@ function checkAllExpeditions() {
             // This expedition finished while the player was away
             console.log(`Found completed offline expedition: ${index}`);
             exp.status = "complete";
-            exp.rewards = generateExpeditionRewards(exp.region);
+            // We pass the index (0, 1, or 2) to generate the correct rewards
+            exp.rewards = generateExpeditionRewards(index); 
         }
     });
     // Save any changes we made
@@ -779,18 +814,24 @@ function initExpeditions() {
     
     grid.innerHTML = ''; // Clear it
 
-    for (let i = 0; i < 3; i++) {
+    // Loop through our new data constant
+    for (let i = 0; i < EXPEDITION_DATA.length; i++) {
+        const slotData = EXPEDITION_DATA[i];
+        
         const slot = document.createElement('div');
         slot.classList.add('expedition-slot');
         slot.id = `exp-slot-${i}`; // Give each slot a unique ID
         
         // Add placeholder content. updateExpeditionsUI will fill it.
-        slot.innerHTML = `<h4>Slot ${i + 1}</h4>`; 
+        // We add the image here, as it's static.
+        slot.innerHTML = `
+            <img src="${slotData.image}" alt="${slotData.name}" class="expedition-image">
+            <h4>${slotData.name}</h4>
+        `; 
         
         grid.appendChild(slot);
     }
 }
-
 /**
  * Redraws the content of all expedition slots based on gameState.
  */
@@ -798,23 +839,24 @@ function updateExpeditionsUI() {
     gameState.expeditions.forEach((exp, index) => {
         const slot = document.getElementById(`exp-slot-${index}`);
         if (!slot) return;
-
-        let content = '';
-        const regionName = "Riverbed"; // Placeholder
         
+        // Get the "master data" for this slot
+        const slotData = EXPEDITION_DATA[index];
+        let content = '';
+
+        // The image and title are now permanent, so we just build the
+        // content for the bottom (status, timer, button)
         switch (exp.status) {
             case "empty":
                 content = `
-                    <h4>Slot ${index + 1} (Short)</h4>
-                    <p class="status">Ready to explore the ${regionName}.</p>
-                    <button class="game-button" onclick="startExpedition(${index})">Start (5m)</button>
+                    <p class="status">Ready to explore.</p>
+                    <button class="game-button" onclick="startExpedition(${index})">Start (${slotData.durationText})</button>
                 `;
                 break;
             
             case "out":
                 content = `
-                    <h4>Slot ${index + 1} (Short)</h4>
-                    <p class="status">Exploring the ${regionName}...</p>
+                    <p class="status">Exploring...</p>
                     <div class="timer" id="exp-timer-${index}">${formatTime(exp.endTs - Date.now())}</div>
                     <button class="game-button" disabled>In Progress</button>
                 `;
@@ -824,42 +866,52 @@ function updateExpeditionsUI() {
                 let rewardText = "Reward ready!"; // Default
                 if (exp.rewards) {
                     if (exp.rewards.type === "pack") {
-                        rewardText = `Found ${exp.rewards.count} ${exp.rewards.packType} pack!`;
-                    } else if (exp.rewards.type === "card") {
-                        // This part is for any future card rewards
-                        rewardText = `Found ${exp.rewards.items.length} new card(s).`;
+                        rewardText = `Found 1 ${exp.rewards.packType} pack!`;
                     }
                 }
                 
                 content = `
-                    <h4>Slot ${index + 1} (Short)</h4>
                     <p class="status">Expedition complete! ${rewardText}</p>
                     <button class="game-button claim-button" onclick="claimExpedition(${index})">Claim Reward</button>
                 `;
                 break;
         }
-        slot.innerHTML = content;
+        
+        // We can't just set innerHTML, as it would delete our image/title.
+        // So, we find/create a "dynamic" area to put the content in.
+        let dynamicArea = slot.querySelector('.exp-dynamic-area');
+        if (!dynamicArea) {
+            dynamicArea = document.createElement('div');
+            dynamicArea.className = 'exp-dynamic-area';
+            // Make it fill the space
+            dynamicArea.style.display = 'flex';
+            dynamicArea.style.flexDirection = 'column';
+            dynamicArea.style.justifyContent = 'space-between';
+            dynamicArea.style.flexGrow = '1';
+            slot.appendChild(dynamicArea);
+        }
+        
+        dynamicArea.innerHTML = content;
     });
 }
-
 /**
  * Starts a new expedition.
  * @param {number} slotIndex - The slot to start (0, 1, or 2)
  */
 function startExpedition(slotIndex) {
     const now = Date.now();
-    const duration = 5 * 60 * 1000; // 5 minutes
+    // Get the duration from our new constant!
+    const duration = EXPEDITION_DATA[slotIndex].durationMs; 
     
     gameState.expeditions[slotIndex] = {
         status: "out",
-        region: "riverbed", // Hard-coded for now
+        slotIndex: slotIndex, // Store which slot this is
         endTs: now + duration
     };
     
     saveState();
     updateExpeditionsUI(); // Redraw the UI
 }
-
 /**
  * Claims the rewards from a finished expedition.
  * @param {number} slotIndex - The slot to claim (0, 1, or 2)
@@ -897,33 +949,53 @@ function claimExpedition(slotIndex) {
 
 /**
  * Generates rewards for an expedition.
- * @param {string} region - The region explored (e.g., "riverbed")
+ * @param {number} slotIndex - The slot that finished (0, 1, or 2)
  * @returns {Object} - A reward object
  */
-function generateExpeditionRewards(region) {
-    // We can make this more complex later, e.g., using 'region' or duration
+function generateExpeditionRewards(slotIndex) {
+    // Get the master data for this slot
+    const slotData = EXPEDITION_DATA[slotIndex];
     
-    // For now, all "Short" expeditions reward 1 basic pack.
+    // Roll for the bonus!
+    const roll = Math.random() * 100; // 0 - 99.99...
+    let chosenPack = slotData.basePack; // Default to base pack
+
+    if (roll < slotData.bonusChance) {
+        console.log(`Expedition ${slotIndex} hit the bonus!`);
+        chosenPack = slotData.bonusPack;
+    }
+
     return {
         type: "pack",
-        packType: "basic",
+        packType: chosenPack,
         count: 1
     };
 }
 
 /**
- * Helper function: Converts milliseconds into a 00:00 string.
+ * Helper function: Converts milliseconds into a 00:00:00 string.
  * @param {number} ms - Milliseconds remaining
  * @returns {string} - Formatted time string
  */
 function formatTime(ms) {
     if (ms < 0) ms = 0;
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
     
-    // 'padStart' adds a leading '0' if the number is less than 10
-    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    let totalSeconds = Math.floor(ms / 1000);
+    let totalMinutes = Math.floor(totalSeconds / 60);
+    const hours = Math.floor(totalMinutes / 60);
+    
+    const seconds = totalSeconds % 60;
+    const minutes = totalMinutes % 60;
+    
+    // 'padStart' adds a leading '0'
+    const s = String(seconds).padStart(2, '0');
+    const m = String(minutes).padStart(2, '0');
+    
+    if (hours > 0) {
+        return `${hours}:${m}:${s}`; // e.g., "7:59:59"
+    } else {
+        return `${m}:${s}`; // e.g., "59:59"
+    }
 }
 
 /*
