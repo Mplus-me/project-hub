@@ -814,10 +814,19 @@ function updateExpeditionsUI() {
                 break;
                 
             case "complete":
-                const rewardCount = exp.rewards.length;
+                let rewardText = "Reward ready!"; // Default
+                if (exp.rewards) {
+                    if (exp.rewards.type === "pack") {
+                        rewardText = `Found ${exp.rewards.count} ${exp.rewards.packType} pack!`;
+                    } else if (exp.rewards.type === "card") {
+                        // This part is for any future card rewards
+                        rewardText = `Found ${exp.rewards.items.length} new card(s).`;
+                    }
+                }
+                
                 content = `
                     <h4>Slot ${index + 1} (Short)</h4>
-                    <p class="status">Expedition complete! Found ${rewardCount} new card(s).</p>
+                    <p class="status">Expedition complete! ${rewardText}</p>
                     <button class="game-button claim-button" onclick="claimExpedition(${index})">Claim Reward</button>
                 `;
                 break;
@@ -850,42 +859,49 @@ function startExpedition(slotIndex) {
  */
 function claimExpedition(slotIndex) {
     const exp = gameState.expeditions[slotIndex];
-    if (exp.status !== "complete") return; // Safety check
+    if (exp.status !== "complete" || !exp.rewards) return; // Safety check
 
-    // Add cards to inventory
-    addCardsToInventory(exp.rewards);
-    alert(`You found: ${exp.rewards.map(r => allCardsData[r.cardId].name).join(', ')}`);
+    const reward = exp.rewards;
+    let alertMessage = "";
+
+    // Check the reward type and process it
+    if (reward.type === "pack") {
+        addPackToInventory(reward.packType, reward.count);
+        alertMessage = `You found 1 ${reward.packType} Pack!`;
+
+    } else if (reward.type === "card") {
+        addCardsToInventory(reward.items);
+        alertMessage = `You found: ${reward.items.map(r => allCardsData[r.cardId].name).join(', ')}`;
+    
+    } else {
+        console.warn("Unknown reward type in expedition slot.");
+    }
+
+    if (alertMessage) {
+        alert(alertMessage);
+    }
 
     // Reset the slot
     gameState.expeditions[slotIndex] = { status: "empty" };
     
     saveState();
-    updateUI(); // Do a full UI update to refresh archive
+    updateUI(); // Do a full UI update to refresh archive/pack counts
 }
 
 /**
  * Generates rewards for an expedition.
  * @param {string} region - The region explored (e.g., "riverbed")
- * @returns {Array<Object>} An array of card objects (e.g., [{cardId, variant}])
+ * @returns {Object} - A reward object
  */
 function generateExpeditionRewards(region) {
-    // For now, just returns 1 random card from that region
+    // We can make this more complex later, e.g., using 'region' or duration
     
-    // Get all card IDs from that region
-    const validCardIds = Object.keys(allCardsData).filter(id => {
-        return allCardsData[id].region === region;
-    });
-
-    if (validCardIds.length === 0) {
-        console.warn(`No cards found for region: ${region}`);
-        return []; // Return empty if no cards match
-    }
-
-    // Pick a random card from the filtered list
-    const randomIndex = Math.floor(Math.random() * validCardIds.length);
-    const cardId = validCardIds[randomIndex];
-    
-    return [{ cardId: cardId, variant: "normal" }];
+    // For now, all "Short" expeditions reward 1 basic pack.
+    return {
+        type: "pack",
+        packType: "basic",
+        count: 1
+    };
 }
 
 /**
