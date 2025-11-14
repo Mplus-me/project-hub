@@ -104,6 +104,32 @@ const WILD_RARITY_CHANCE = [
     { rarity: "common", chance: 70 }      // (Cumulative: 100%)
 ];
 
+// The subset of rocks used in minigames
+const MINIGAME_ROCK_LIST = [
+    'rock-001', // River Pebble
+    'rock-002', // Sharp Flint
+    'rock-007', // Small Geode
+    'rock-008', // Obsidian
+    'rock-009', // Rose Quartz
+    'rock-010', // Pyrite
+    'rock-011', // Amethyst
+    'rock-019', // Turquoise
+    'rock-020', // Garnet
+    'rock-021', // Peridot
+    'rock-022', // Malachite
+    'rock-025'  // Petrified Wood
+];
+
+// Loot table for the rock sifting minigame
+// Uses the "desert" region for card rewards
+const SIFTING_REWARDS = [
+    { type: "pack", packType: "advanced", chance: 1 },  // 1%
+    { type: "pack", packType: "explorer", chance: 4 },  // 4%
+    { type: "pack", packType: "basic", chance: 35 }, // 35%
+    { type: "card", region: "desert", chance: 30 }, // 30%
+    { type: "none", message: "Just sand...", chance: 30 }  // 30%
+];
+
 /** @type {GameState} */
 let gameState = {}; // Holds the player's save data (packs, cards, etc.)
 
@@ -1190,7 +1216,7 @@ function initMinigameHub() {
     
     // We still need to init the internal logic of each game
     initFishingMinigame();
-    // initSiftingMinigame(); // We'll add this next
+    initSiftingMinigame();
 }
 
 /**
@@ -1423,6 +1449,246 @@ function resetFishingGame() {
     button.textContent = "Cast";
     button.classList.remove('claim-button');
     status.textContent = ""; // Clear status
+}
+
+/*
+================================================================================
+SECTION 6.2: MINIGAMES (ROCK SIFTING)
+================================================================================
+*/
+
+// --- Sifting Game State ---
+let siftingTimer;           // Holds the setInterval for the game timer
+let siftingSecondsLeft;     // Countdown timer
+let siftingFindList;        // Array of rock IDs we need to find
+let siftingRocksInSieve;    // Array of all rocks placed in the sieve
+
+/**
+ * Sets up the "Start" button for the sifting game.
+ */
+function initSiftingMinigame() {
+    // This is just a placeholder to show the game is active
+    // The real "Start" button will be added to the HTML
+}
+
+/**
+ * Resets and starts a new Rock Sifting game.
+ */
+function startSiftingGame() {
+    // 1. Generate the "Find List"
+    siftingFindList = generateSiftingFindList(3); // Find 3 unique rocks
+    
+    // 2. Generate the rocks to place in the sieve
+    // We'll place 10 total: our 3 targets + 7 "decoys"
+    let decoys = generateSiftingFindList(7, siftingFindList); // 7 decoys, excluding targets
+    siftingRocksInSieve = [...siftingFindList, ...decoys];
+    
+    // 3. Shuffle the rocks
+    siftingRocksInSieve.sort(() => Math.random() - 0.5);
+
+    // 4. Reset Timer
+    siftingSecondsLeft = 20; // 20 seconds to find them
+    
+    // 5. Draw the UI
+    drawSiftingFindList();
+    drawSiftingSieve();
+    updateSiftingTimerDisplay();
+
+    // 6. Start the game timer
+    if (siftingTimer) clearInterval(siftingTimer);
+    siftingTimer = setInterval(onSiftingTick, 1000);
+    
+    // Make sure the "Start" button is hidden and the game is visible
+    document.getElementById('sifting-start-area').style.display = 'none';
+    document.getElementById('sifting-game-area').style.display = 'block';
+}
+
+/**
+ * Runs every second during the sifting game.
+ */
+function onSiftingTick() {
+    siftingSecondsLeft--;
+    updateSiftingTimerDisplay();
+
+    if (siftingSecondsLeft <= 0) {
+        // Time's up!
+        endSiftingGame(false); // 'false' = loss
+    }
+}
+
+/**
+ * Creates the "Find List" UI.
+ */
+function drawSiftingFindList() {
+    const listEl = document.getElementById('sifting-find-list');
+    listEl.innerHTML = '';
+    
+    siftingFindList.forEach(rockId => {
+        const cardData = allCardsData[rockId];
+        const itemEl = document.createElement('li');
+        itemEl.id = `find-${rockId}`;
+        itemEl.textContent = cardData.name;
+        listEl.appendChild(itemEl);
+    });
+}
+
+/**
+ * Draws all the rocks randomly inside the sieve area.
+ */
+function drawSiftingSieve() {
+    const sieveEl = document.getElementById('sifting-sieve');
+    sieveEl.innerHTML = ''; // Clear old rocks
+
+    siftingRocksInSieve.forEach((rockId, index) => {
+        const cardData = allCardsData[rockId];
+        const rockEl = document.createElement('img');
+        
+        rockEl.src = getCardImagePath(rockId, 'normal');
+        rockEl.alt = cardData.name;
+        rockEl.classList.add('sieve-rock');
+        rockEl.dataset.rockId = rockId; // Store the ID
+        
+        // Randomly position the rock within the sieve
+        // We use percentages to keep it responsive
+        rockEl.style.left = `${Math.random() * 90}%`; // 0-90% to keep it inside
+        rockEl.style.top = `${Math.random() * 90}%`;
+        
+        // Random rotation and size for variety
+        rockEl.style.transform = `rotate(${Math.random() * 360}deg) scale(${0.8 + Math.random() * 0.4})`; // 0.8x to 1.2x scale
+        
+        // Add click listener
+        rockEl.addEventListener('click', onSieveRockClick);
+        
+        sieveEl.appendChild(rockEl);
+    });
+}
+
+/**
+ * Handles clicking on a rock in the sieve.
+ */
+function onSieveRockClick(event) {
+    const clickedRock = event.target;
+    const clickedId = clickedRock.dataset.rockId;
+
+    // Check if this rock is in our "Find List"
+    const findIndex = siftingFindList.indexOf(clickedId);
+
+    if (findIndex > -1) {
+        // --- Correct Click! ---
+        
+        // 1. Remove it from the list
+        siftingFindList.splice(findIndex, 1);
+        
+        // 2. Strike it out on the UI
+        const listItem = document.getElementById(`find-${clickedId}`);
+        if (listItem) listItem.classList.add('found');
+        
+        // 3. Make the rock "fade out"
+        clickedRock.classList.add('found-rock');
+        clickedRock.removeEventListener('click', onSieveRockClick); // Disable click
+
+        // 4. Check for win
+        if (siftingFindList.length === 0) {
+            endSiftingGame(true); // 'true' = win
+        }
+    } else {
+        // --- Wrong Click! ---
+        // Add a "shake" effect
+        clickedRock.classList.add('shake');
+        // Remove the class after the animation finishes
+        setTimeout(() => clickedRock.classList.remove('shake'), 300);
+    }
+}
+
+/**
+ * Ends the game, calculates rewards, and resets the UI.
+ * @param {boolean} didWin - Whether the player won or lost
+ */
+function endSiftingGame(didWin) {
+    clearInterval(siftingTimer); // Stop the clock
+    const statusEl = document.getElementById('sifting-status');
+    
+    if (didWin) {
+        // --- Player Won! ---
+        const reward = generateSiftingReward();
+        let statusMessage = "";
+
+        switch (reward.type) {
+            case "pack":
+                addPackToInventory(reward.packType, 1);
+                statusMessage = `You found them all and got a ${reward.packType} Pack!`;
+                break;
+            case "card":
+                const cardId = getRandomCardOfRegion(reward.region);
+                if (cardId) {
+                    addCardsToInventory([{ cardId: cardId, variant: "normal" }]);
+                    statusMessage = `You found them all and uncovered a ${allCardsData[cardId].name}!`;
+                }
+                break;
+            default:
+                statusMessage = `You found them all! You also found... ${reward.message}`;
+                break;
+        }
+        statusEl.textContent = statusMessage;
+        
+        if (reward.type !== "none") {
+            saveState();
+            updateUI(); // Refresh pack/archive
+        }
+        
+    } else {
+        // --- Player Lost (Time Up) ---
+        statusEl.textContent = "Time's up! The sand shifted. Try again!";
+    }
+
+    // After 3 seconds, reset to the "Start" screen
+    setTimeout(() => {
+        document.getElementById('sifting-start-area').style.display = 'block';
+        document.getElementById('sifting-game-area').style.display = 'none';
+        statusEl.textContent = ''; // Clear status
+    }, 3000);
+}
+
+/**
+ * Generates the reward for winning the sifting game.
+ * @returns {Object} - A reward object from the loot table
+ */
+function generateSiftingReward() {
+    const roll = Math.random() * 100;
+    let cumulativeChance = 0;
+
+    for (const reward of SIFTING_REWARDS) {
+        cumulativeChance += reward.chance;
+        if (roll < cumulativeChance) {
+            return reward;
+        }
+    }
+    return SIFTING_REWARDS[SIFTING_REWARDS.length - 1]; // Failsafe
+}
+
+/**
+ * Helper: Gets a list of unique rock IDs from the minigame list.
+ * @param {number} count - How many rocks to get
+ * @param {Array<string>} exclude - An array of IDs to exclude
+ * @returns {Array<string>}
+ */
+function generateSiftingFindList(count, exclude = []) {
+    let availableRocks = MINIGAME_ROCK_LIST.filter(id => !exclude.includes(id));
+    availableRocks.sort(() => Math.random() - 0.5); // Shuffle
+    return availableRocks.slice(0, count);
+}
+
+/**
+ * Updates the timer text.
+ */
+function updateSiftingTimerDisplay() {
+    const timerEl = document.getElementById('sifting-timer');
+    timerEl.textContent = `Time: ${siftingSecondsLeft}s`;
+    if (siftingSecondsLeft <= 5 && siftingSecondsLeft > 0) {
+        timerEl.classList.add('danger');
+    } else {
+        timerEl.classList.remove('danger');
+    }
 }
 
 /*
