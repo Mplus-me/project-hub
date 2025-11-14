@@ -110,6 +110,8 @@ let gameState = {}; // Holds the player's save data (packs, cards, etc.)
 // Temporary state for the converter.
 // Holds an array of objects: [{cardId, variant, count}]
 let conversionSelection = [];
+// Stores the player's sorting choice for the archive
+let currentArchiveSort = 'name-asc'; // Default to A-Z
 
 let allCardsData = {}; // Holds all card definitions from cards.json
 let allPacksData = {}; // Holds all pack drop rates from packs.json
@@ -152,6 +154,7 @@ async function initGame() {
     initExpeditions(); // Initialize expeditions
     initFishingMinigame(); // Initialize fishing minigame
     initConverter(); // Initialize duplicate converter
+    initArchiveSorter(); // Initialize Archive Sorter
     
     updateUI(); // Draw the UI (like the archive) with the loaded data
 
@@ -363,6 +366,7 @@ function updateUI() {
 
 /**
  * Draws all the player's cards into the Archive panel grid.
+ * This function now sorts the cards based on 'currentArchiveSort'.
  */
 function updateArchiveUI() {
     const grid = document.getElementById('archive-grid');
@@ -371,9 +375,52 @@ function updateArchiveUI() {
     // Clear the grid before redrawing all cards
     grid.innerHTML = ''; 
 
-    // Loop through the player's inventory
-    gameState.inventory.cards.forEach(card => {
-        // Get the card's master data (name, rarity, etc.) from allCardsData
+    // --- 1. Get and Sort the Cards ---
+    // Make a *copy* of the inventory to sort. We never sort the original.
+    let sortedCards = [...gameState.inventory.cards];
+
+    // The sorting function
+    sortedCards.sort((a, b) => {
+        const cardDataA = allCardsData[a.cardId];
+        const cardDataB = allCardsData[b.cardId];
+
+        switch (currentArchiveSort) {
+            case 'name-asc':
+                return cardDataA.name.localeCompare(cardDataB.name);
+            
+            case 'name-desc':
+                return cardDataB.name.localeCompare(cardDataA.name);
+
+            case 'rarity-asc': // Common first
+                // Find the index in our master list (e.g., Common=5, Legendary=1)
+                const rarityA_asc = RARITY_ORDER.indexOf(cardDataA.rarity);
+                const rarityB_asc = RARITY_ORDER.indexOf(cardDataB.rarity);
+                // Sort by index descending (5, 4, 3...)
+                // If rarity is the same, do a secondary sort by name
+                if (rarityA_asc !== rarityB_asc) {
+                    return rarityB_asc - rarityA_asc;
+                }
+                return cardDataA.name.localeCompare(cardDataB.name);
+
+            case 'rarity-desc': // Rarest first
+                // Find the index (e.g., Common=5, Legendary=1)
+                const rarityA_desc = RARITY_ORDER.indexOf(cardDataA.rarity);
+                const rarityB_desc = RARITY_ORDER.indexOf(cardDataB.rarity);
+                // Sort by index ascending (1, 2, 3...)
+                // If rarity is the same, do a secondary sort by name
+                if (rarityA_desc !== rarityB_desc) {
+                    return rarityA_desc - rarityB_desc;
+                }
+                return cardDataA.name.localeCompare(cardDataB.name);
+
+            default:
+                return 0; // No sort
+        }
+    });
+
+    // --- 2. Draw the Sorted Cards ---
+    // Loop through the *sorted* array
+    sortedCards.forEach(card => {
         const cardData = allCardsData[card.cardId];
         if (!cardData) {
             console.warn(`Missing card data for ID: ${card.cardId}`);
@@ -383,20 +430,13 @@ function updateArchiveUI() {
         // Create the card element
         const cardElement = document.createElement('div');
         cardElement.classList.add('card-in-grid');
-        // Add rarity as a class for styling (e.g., "rarity-common")
-        cardElement.classList.add(`rarity-${cardData.rarity}`);
-
-        // Make the card draggable
+        cardElement.classList.add(`rarity-${cardData.rarity}`); 
         cardElement.draggable = true;
-        
-        // Store the card's data on the element
         cardElement.dataset.cardId = card.cardId;
         cardElement.dataset.variant = card.variant;
 
-        // Get the image path
         const imgPath = getCardImagePath(card.cardId, card.variant);
 
-        // Create the HTML for the card
         cardElement.innerHTML = `
             <div class="card-image-placeholder">
                 <img src="${imgPath}" alt="${cardData.name}">
@@ -406,11 +446,8 @@ function updateArchiveUI() {
                 <span class="card-count">x${card.count}</span>
             </div>
         `;
-
-        // Add the 'dragstart' event listener
-        cardElement.addEventListener('dragstart', handleCardDragStart);
         
-        // Add the new card element to the grid
+        cardElement.addEventListener('dragstart', handleCardDragStart);
         grid.appendChild(cardElement);
     });
 }
@@ -442,6 +479,21 @@ function handleCardDragStart(event) {
         isCardDragActive = false;
         
     }, { once: true }); // 'once: true' automatically removes this listener
+}
+
+/**
+ * Sets up the event listener for the archive sort dropdown.
+ */
+function initArchiveSorter() {
+    const sortSelect = document.getElementById('archive-sort');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', (event) => {
+            // When the dropdown changes, update our global variable
+            currentArchiveSort = event.target.value;
+            // Force the archive to redraw with the new sort
+            updateArchiveUI();
+        });
+    }
 }
 
 /**
