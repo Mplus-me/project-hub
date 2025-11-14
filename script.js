@@ -152,7 +152,8 @@ async function initGame() {
 
     initMuseum(); // Initialize museum
     initExpeditions(); // Initialize expeditions
-    initFishingMinigame(); // Initialize fishing minigame
+    // initFishingMinigame(); // Initialize fishing minigame
+    initMinigameHub(); // Initialize minigame hub
     initConverter(); // Initialize duplicate converter
     initArchiveSorter(); // Initialize Archive Sorter
     
@@ -1162,6 +1163,67 @@ function formatTime(ms) {
 SECTION 6: MINIGAMES (FISHING)
 ================================================================================
 */
+
+/*
+================================================================================
+SECTION 6: MINIGAMES
+================================================================================
+*/
+
+/**
+ * Sets up the main minigame selection hub and all individual games.
+ */
+function initMinigameHub() {
+    const buttons = document.querySelectorAll('.minigame-button');
+    const backBtn = document.getElementById('minigame-back-btn');
+
+    buttons.forEach(button => {
+        button.addEventListener('click', () => {
+            const gameId = button.dataset.game;
+            showMinigameStage(gameId);
+        });
+    });
+
+    backBtn.addEventListener('click', () => {
+        showMinigameStage('menu'); // 'menu' is our keyword
+    });
+    
+    // We still need to init the internal logic of each game
+    initFishingMinigame();
+    // initSiftingMinigame(); // We'll add this next
+}
+
+/**
+ * Shows/hides the minigame selection menu and game stages.
+ * @param {string} gameId - The ID of the game to show (e.g., "fishing") or "menu"
+ */
+function showMinigameStage(gameId) {
+    const selectionDiv = document.getElementById('minigame-selection');
+    const stagesDiv = document.getElementById('minigame-stages');
+    const allGameDivs = stagesDiv.querySelectorAll('.minigame-container');
+    
+    if (gameId === 'menu') {
+        // Show menu, hide stages
+        selectionDiv.style.display = 'block';
+        stagesDiv.style.display = 'none';
+        
+        // Also reset any active game state (like fishing)
+        resetFishingGame(); 
+    } else {
+        // Hide menu, show stages
+        selectionDiv.style.display = 'none';
+        stagesDiv.style.display = 'block';
+        
+        // Hide all games...
+        allGameDivs.forEach(div => div.classList.remove('active-minigame'));
+        
+        // ...then show the one we clicked
+        const targetGame = document.getElementById(`${gameId}-minigame`);
+        if (targetGame) {
+            targetGame.classList.add('active-minigame');
+        }
+    }
+}
 
 /**
  * Sets up the click listener for the fishing button.
