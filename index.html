@@ -105,17 +105,63 @@
 
                <div id="minigame-section">
                     <h3>Minigames</h3>
-                    <p>Play a short game to earn a pack.</p>
-                    
-                    <div id="fishing-minigame" class="minigame-container">
-                        <h4>Cozy Fishing</h4>
-                        <p>Click to cast. When you see "!", click again to reel it in!</p>
-                        
-                        <div id="fishing-pond">
-                            <button id="fishing-button" class="game-button">Cast</button>
-                            <div id="fishing-status" class="status"></div>
+
+                    <div id="minigame-selection">
+                        <p>Select a game to play.</p>
+                        <div class="minigame-grid">
+                            
+                            <button class="minigame-button" data-game="fishing">
+                                <img src="images/ui/game-fishing.png" class="minigame-icon" alt="">
+                                <span>Cozy Fishing</span>
+                            </button>
+                            
+                            <button class="minigame-button" data-game="sifting" disabled>
+                                <img src="images/ui/game-sifting.png" class="minigame-icon" alt="">
+                                <span>Rock Sifting (Soon)</span>
+                            </button>
+                            
+                            <button class="minigame-button" data-game="matching" disabled>
+                                <img src="images/ui/game-matching.png" class="minigame-icon" alt="">
+                                <span>Field Matching (Soon)</span>
+                            </button>
+                            
+                            <button class="minigame-button" data-game="cracker" disabled>
+                                <img src="images/ui/game-cracker.png" class="minigame-icon" alt="">
+                                <span>Geode Cracker (Soon)</span>
+                            </button>
+                            
+                            <button class="minigame-button" data-game="sort" disabled>
+                                <img src="images/ui/game-sort.png" class="minigame-icon" alt="">
+                                <span>Sort Stack (Soon)</span>
+                            </button>
+
+                            <button class="minigame-button" data-game="brush" disabled>
+                                <img src="images/ui/game-brush.png" class="minigame-icon" alt="">
+                                <span>Brush It Off (Soon)</span>
+                            </button>
+
                         </div>
                     </div>
+
+                    <div id="minigame-stages">
+                        <button id="minigame-back-btn" class="game-button">&larr; Back to Minigames</button>
+                        
+                        <div id="fishing-minigame" class="minigame-container">
+                            <h4>Cozy Fishing</h4>
+                            <p>Click to cast. When you see "!", click again to reel it in!</p>
+                            
+                            <div id="fishing-pond">
+                                <button id="fishing-button" class="game-button">Cast</button>
+                                <div id="fishing-status" class="status"></div>
+                            </div>
+                        </div>
+                        
+                        <div id="sifting-minigame" class="minigame-container">
+                            <h4>Rock Sifting</h4>
+                            <p>(Coming soon...)</p>
+                        </div>
+
+                        </div>
                 </div>
             </div>
 
