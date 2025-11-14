@@ -655,7 +655,7 @@ h1, h2 {
 
 /* This is our cozy-themed select dropdown */
 .cozy-select {
-    font-family: 'Verdana', sans-serif;
+    font-family: inherit;
     font-size: 14px;
     background-color: #fff;
     border: 2px solid #C9C1A5;
