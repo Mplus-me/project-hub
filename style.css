@@ -399,16 +399,6 @@ h1, h2 {
     color: #999;
 }
 
-
-/* --- 11. Minigame Panel Styles --- */
-.minigame-container {
-    background-color: #F4F1DE; /* Light parchment */
-    border: 2px solid #C9C1A5;
-    border-radius: 8px;
-    padding: 15px;
-    margin-top: 10px;
-}
-
 .minigame-container h4 {
     color: #3D405B;
     margin-bottom: 5px;
