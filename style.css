@@ -914,7 +914,7 @@ h1, h2 {
     border: 2px solid #fff;
     
     transform: rotate(15deg);
-    z-index: 5;
+    z-index: 10;
     
     /* Placeholder image for a 'new' icon */
     /* background-image: url('images/ui/icon-new.png'); */
