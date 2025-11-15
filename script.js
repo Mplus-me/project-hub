@@ -1186,12 +1186,6 @@ function formatTime(ms) {
 
 /*
 ================================================================================
-SECTION 6: MINIGAMES (FISHING)
-================================================================================
-*/
-
-/*
-================================================================================
 SECTION 6: MINIGAMES
 ================================================================================
 */
@@ -1316,7 +1310,7 @@ function failFishing() {
     const status = document.getElementById('fishing-status');
 
     button.disabled = false;
-    button.textContent = "Cast";
+    button.textContent = "Oops!";
     status.textContent = "You clicked too early and scared it away!";
     
     // Reset the game after a short delay
