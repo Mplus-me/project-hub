@@ -471,7 +471,7 @@ function updateUI() {
 
 /**
  * Draws all the player's cards into the Archive panel grid.
- * Now handles all variants and new sorting options.
+ * This function now safely handles all variants and new sorting options.
  */
 function updateArchiveUI() {
     const grid = document.getElementById('archive-grid');
@@ -483,8 +483,18 @@ function updateArchiveUI() {
     let sortedCards = [...gameState.inventory.cards];
 
     sortedCards.sort((a, b) => {
+        // Get master data
         const cardDataA = allCardsData[a.cardId];
         const cardDataB = allCardsData[b.cardId];
+        
+        // Failsafe: If data is missing (e.g., old/broken card), don't sort
+        if (!cardDataA || !cardDataB) return 0;
+
+        // NEW: Provide default values for old save files
+        const aFoil = a.foil || "normal";
+        const bFoil = b.foil || "normal";
+        const aArt = a.art || 0;
+        const bArt = b.art || 0;
 
         switch (currentArchiveSort) {
             case 'name-asc':
@@ -506,18 +516,15 @@ function updateArchiveUI() {
                 return cardDataA.name.localeCompare(cardDataB.name);
             
             case 'foil-first':
-                // 'normal' vs 'foil'. 'foil' comes first.
-                // b.foil.localeCompare(a.foil) does this: "foil" vs "normal" = -1
-                if (a.foil !== b.foil) return b.foil.localeCompare(a.foil);
-                // If both are foil/normal, sort by art, then name
-                if (a.art !== b.art) return b.art - a.art;
+                // Uses the new "safe" variables
+                if (aFoil !== bFoil) return bFoil.localeCompare(aFoil);
+                if (aArt !== bArt) return bArt - aArt;
                 return cardDataA.name.localeCompare(cardDataB.name);
 
             case 'art-first':
-                // b.art - a.art puts higher art numbers (2, 1) first
-                if (a.art !== b.art) return b.art - a.art;
-                // If art is same, sort by foil, then name
-                if (a.foil !== b.foil) return b.foil.localeCompare(a.foil);
+                // Uses the new "safe" variables
+                if (aArt !== bArt) return bArt - aArt;
+                if (aFoil !== bFoil) return bFoil.localeCompare(aFoil);
                 return cardDataA.name.localeCompare(cardDataB.name);
 
             default:
@@ -530,34 +537,37 @@ function updateArchiveUI() {
         const cardData = allCardsData[card.cardId];
         if (!cardData) return;
 
+        // Provide defaults for drawing, just in case
+        const art = card.art || 0;
+        const foil = card.foil || "normal";
+
         const cardElement = document.createElement('div');
         cardElement.classList.add('card-in-grid');
         cardElement.classList.add(`rarity-${cardData.rarity}`);
         
-        // Pass all data for dragging
         cardElement.draggable = true;
         cardElement.dataset.cardId = card.cardId;
-        cardElement.dataset.art = card.art;
-        cardElement.dataset.foil = card.foil;
+        cardElement.dataset.art = art;
+        cardElement.dataset.foil = foil;
 
-        const imgPath = getCardImagePath(card.cardId, card.art);
+        const imgPath = getCardImagePath(card.cardId, art);
 
         // --- Handle Variants ---
         let foilOverlayHTML = '';
-        if (card.foil === 'foil') {
+        if (foil === 'foil') {
             foilOverlayHTML = '<div class="foil-overlay"></div>';
         }
 
         let variantText = '';
-        if (card.foil === 'foil') variantText += "Foil";
-        if (card.art > 0) variantText += ` (Alt ${card.art})`;
+        if (foil === 'foil') variantText += "Foil";
+        if (art > 0) variantText += ` (Alt ${art})`;
 
         cardElement.innerHTML = `
             <div class="card-image-placeholder">
                 <img src="${imgPath}" alt="${cardData.name}">
                 ${foilOverlayHTML}
             </div>
-            <div class="card-info">
+            <div class.card-info">
                 <span class="card-name">${cardData.name}</span>
                 <span class="card-count">x${card.count}</span>
             </div>
