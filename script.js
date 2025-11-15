@@ -182,6 +182,7 @@ async function initGame() {
     initMinigameHub(); // Initialize minigame hub
     initConverter(); // Initialize duplicate converter
     initArchiveSorter(); // Initialize Archive Sorter
+    initPackModal(); // Initialize Pack Modal
     
     updateUI(); // Draw the UI (like the archive) with the loaded data
 
@@ -717,10 +718,84 @@ function updateProgressionUI() {
     }
 }
 
+/* --- Pack Opening Modal Functions --- */
+
+/**
+ * Sets up click listeners for the pack reveal modal.
+ */
+function initPackModal() {
+    const modal = document.getElementById('pack-reveal-modal');
+    const closeBtn = document.getElementById('modal-close-btn');
+
+    if (modal && closeBtn) {
+        // Click the "Awesome!" button to close
+        closeBtn.addEventListener('click', hidePackModal);
+        
+        // Click the background overlay to close
+        modal.addEventListener('click', (event) => {
+            // We check if the click was on the overlay itself,
+            // not on the window bubble inside it.
+            if (event.target === modal) {
+                hidePackModal();
+            }
+        });
+    }
+}
+
+/**
+ * Populates and shows the pack reveal modal.
+ * @param {Array<Object>} newCards - Array of the 3 cards just opened.
+ */
+function showPackModal(newCards) {
+    const modal = document.getElementById('pack-reveal-modal');
+    const grid = document.getElementById('pack-reveal-grid');
+    if (!modal || !grid) return;
+
+    // 1. Clear the grid of old cards
+    grid.innerHTML = '';
+
+    // 2. Build and add the 3 new card elements
+    newCards.forEach(card => {
+        const cardData = allCardsData[card.cardId];
+        
+        // We re-use all our existing CSS classes from the archive
+        const cardElement = document.createElement('div');
+        cardElement.classList.add('card-in-grid');
+        cardElement.classList.add(`rarity-${cardData.rarity}`);
+        
+        const imgPath = getCardImagePath(card.cardId, card.variant);
+
+        // We use a simplified HTML, no count or drag
+        cardElement.innerHTML = `
+            <div class="card-image-placeholder">
+                <img src="${imgPath}" alt="${cardData.name}">
+            </div>
+            <div class="card-info">
+                <span class="card-name">${cardData.name}</span>
+            </div>
+        `;
+        
+        grid.appendChild(cardElement);
+    });
+
+    // 3. Show the modal
+    modal.style.display = 'flex';
+}
+
+/**
+ * Hides the pack reveal modal.
+ */
+function hidePackModal() {
+    const modal = document.getElementById('pack-reveal-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
 // --- 4. PACK OPENING LOGIC ---
 
 /**
- * Opens a pack, generates cards, and adds them to the player's inventory.
+ * Opens a pack, generates cards, and shows the reveal modal.
  * @param {string} packType - The key for the pack (e.g., "basic", "standard")
  */
 function openPack(packType) {
@@ -748,7 +823,7 @@ function openPack(packType) {
     for (let i = 0; i < cardsPerPack; i++) {
         const rarity = getRandomRarity(packRules);
         const cardId = getRandomCardOfRarity(rarity);
-        const variant = "normal";
+        const variant = "normal"; // We'll add foils/alts later
         newCards.push({ cardId: cardId, variant: variant });
     }
 
@@ -761,12 +836,14 @@ function openPack(packType) {
     // Save the game
     saveState();
 
-    // Update the UI (this will refresh the pack counts and the archive)
+    // Update the UI (this will refresh pack counts *behind* the modal)
     updateUI();
 
     // Log the results for testing
     console.log("Opened pack and received:", newCards);
-    alert(`You opened a ${packType} pack and got 3 new cards! (Check the Archive)`);
+
+    // **** NEW: Show the modal instead of an alert ****
+    showPackModal(newCards);
 }
 
 /**
