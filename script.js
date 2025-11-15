@@ -373,6 +373,17 @@ function getUnlockedRegions() {
     return unlocked;
 }
 
+/**
+ * Checks if a cardId is in the player's inventory *at all*.
+ * Ignores art/foil variants.
+ * @param {string} cardId - The ID to check
+ * @returns {boolean} - true if the ID is not in the inventory, false if it is.
+ */
+function isCardIdNew(cardId) {
+    // .some() is a fast way to check if *any* item in an array matches a condition
+    const cardExists = gameState.inventory.cards.some(card => card.cardId === cardId);
+    return !cardExists;
+}
 
 // --- 3. NAVIGATION & UI FUNCTIONS ---
 
@@ -460,20 +471,17 @@ function updateUI() {
 
 /**
  * Draws all the player's cards into the Archive panel grid.
- * This function now sorts the cards based on 'currentArchiveSort'.
+ * Now handles all variants and new sorting options.
  */
 function updateArchiveUI() {
     const grid = document.getElementById('archive-grid');
-    if (!grid) return; // Safety check
+    if (!grid) return; 
 
-    // Clear the grid before redrawing all cards
     grid.innerHTML = ''; 
 
     // --- 1. Get and Sort the Cards ---
-    // Make a *copy* of the inventory to sort. We never sort the original.
     let sortedCards = [...gameState.inventory.cards];
 
-    // The sorting function
     sortedCards.sort((a, b) => {
         const cardDataA = allCardsData[a.cardId];
         const cardDataB = allCardsData[b.cardId];
@@ -486,59 +494,74 @@ function updateArchiveUI() {
                 return cardDataB.name.localeCompare(cardDataA.name);
 
             case 'rarity-asc': // Common first
-                // Find the index in our master list (e.g., Common=5, Legendary=1)
                 const rarityA_asc = RARITY_ORDER.indexOf(cardDataA.rarity);
                 const rarityB_asc = RARITY_ORDER.indexOf(cardDataB.rarity);
-                // Sort by index descending (5, 4, 3...)
-                // If rarity is the same, do a secondary sort by name
-                if (rarityA_asc !== rarityB_asc) {
-                    return rarityB_asc - rarityA_asc;
-                }
+                if (rarityA_asc !== rarityB_asc) return rarityB_asc - rarityA_asc;
                 return cardDataA.name.localeCompare(cardDataB.name);
 
             case 'rarity-desc': // Rarest first
-                // Find the index (e.g., Common=5, Legendary=1)
                 const rarityA_desc = RARITY_ORDER.indexOf(cardDataA.rarity);
                 const rarityB_desc = RARITY_ORDER.indexOf(cardDataB.rarity);
-                // Sort by index ascending (1, 2, 3...)
-                // If rarity is the same, do a secondary sort by name
-                if (rarityA_desc !== rarityB_desc) {
-                    return rarityA_desc - rarityB_desc;
-                }
+                if (rarityA_desc !== rarityB_desc) return rarityA_desc - rarityB_desc;
+                return cardDataA.name.localeCompare(cardDataB.name);
+            
+            case 'foil-first':
+                // 'normal' vs 'foil'. 'foil' comes first.
+                // b.foil.localeCompare(a.foil) does this: "foil" vs "normal" = -1
+                if (a.foil !== b.foil) return b.foil.localeCompare(a.foil);
+                // If both are foil/normal, sort by art, then name
+                if (a.art !== b.art) return b.art - a.art;
+                return cardDataA.name.localeCompare(cardDataB.name);
+
+            case 'art-first':
+                // b.art - a.art puts higher art numbers (2, 1) first
+                if (a.art !== b.art) return b.art - a.art;
+                // If art is same, sort by foil, then name
+                if (a.foil !== b.foil) return b.foil.localeCompare(a.foil);
                 return cardDataA.name.localeCompare(cardDataB.name);
 
             default:
-                return 0; // No sort
+                return 0;
         }
     });
 
     // --- 2. Draw the Sorted Cards ---
-    // Loop through the *sorted* array
     sortedCards.forEach(card => {
         const cardData = allCardsData[card.cardId];
-        if (!cardData) {
-            console.warn(`Missing card data for ID: ${card.cardId}`);
-            return; // Skip this card if data is missing
-        }
+        if (!cardData) return;
 
-        // Create the card element
         const cardElement = document.createElement('div');
         cardElement.classList.add('card-in-grid');
-        cardElement.classList.add(`rarity-${cardData.rarity}`); 
+        cardElement.classList.add(`rarity-${cardData.rarity}`);
+        
+        // Pass all data for dragging
         cardElement.draggable = true;
         cardElement.dataset.cardId = card.cardId;
-        cardElement.dataset.variant = card.variant;
+        cardElement.dataset.art = card.art;
+        cardElement.dataset.foil = card.foil;
 
-        const imgPath = getCardImagePath(card.cardId, card.variant);
+        const imgPath = getCardImagePath(card.cardId, card.art);
+
+        // --- Handle Variants ---
+        let foilOverlayHTML = '';
+        if (card.foil === 'foil') {
+            foilOverlayHTML = '<div class="foil-overlay"></div>';
+        }
+
+        let variantText = '';
+        if (card.foil === 'foil') variantText += "Foil";
+        if (card.art > 0) variantText += ` (Alt ${card.art})`;
 
         cardElement.innerHTML = `
             <div class="card-image-placeholder">
                 <img src="${imgPath}" alt="${cardData.name}">
+                ${foilOverlayHTML}
             </div>
             <div class="card-info">
                 <span class="card-name">${cardData.name}</span>
                 <span class="card-count">x${card.count}</span>
             </div>
+            <div class="card-variant-label">${variantText}</div>
         `;
         
         cardElement.addEventListener('dragstart', handleCardDragStart);
@@ -669,31 +692,40 @@ function updateMuseumUI() {
 
         if (cardInSlot) {
             // --- This slot is FILLED ---
-            const { cardId, variant } = cardInSlot;
+            const { cardId, art, foil } = cardInSlot; // NEW
             const cardData = allCardsData[cardId];
             
-            // Make it look like a card
-            slot.innerHTML = ''; // Clear "Slot 1" text
+            slot.innerHTML = ''; 
             slot.classList.add('filled');
             
-            // Build the card HTML (a simplified version of the archive card)
-            const imgPath = getCardImagePath(cardId, variant);
+            const imgPath = getCardImagePath(cardId, art);
+            
+            let foilOverlayHTML = '';
+            if (foil === 'foil') {
+                foilOverlayHTML = '<div class="foil-overlay"></div>';
+            }
+            
+            let variantText = '';
+            if (foil === 'foil') variantText += "Foil";
+            if (art > 0) variantText += ` (Alt ${art})`;
+            
             slot.innerHTML = `
                 <div class="card-in-grid rarity-${cardData.rarity}">
                     <div class="card-image-placeholder">
                         <img src="${imgPath}" alt="${cardData.name}">
+                        ${foilOverlayHTML}
                     </div>
                     <div class="card-info">
                         <span class="card-name">${cardData.name}</span>
                     </div>
+                    <div class="card-variant-label">${variantText}</div>
                 </div>
             `;
             
-            // Add a click listener to REMOVE the card
             slot.onclick = () => {
-                gameState.museum.slots[slotIndex] = null; // Empty the slot
+                gameState.museum.slots[slotIndex] = null;
                 saveState();
-                updateMuseumUI(); // Refresh the museum
+                updateMuseumUI();
             };
 
         } else {
@@ -803,41 +835,55 @@ function initPackModal() {
 
 /**
  * Populates and shows the pack reveal modal.
- * @param {Array<Object>} newCards - Array of the 3 cards just opened.
+ * Now handles "NEW!" labels and "Foil" overlays.
+ * @param {Array<Object>} newCards - Array of the 3 cards (with 'isNew' flag)
  */
 function showPackModal(newCards) {
     const modal = document.getElementById('pack-reveal-modal');
     const grid = document.getElementById('pack-reveal-grid');
     if (!modal || !grid) return;
 
-    // 1. Clear the grid of old cards
     grid.innerHTML = '';
 
-    // 2. Build and add the 3 new card elements
     newCards.forEach(card => {
         const cardData = allCardsData[card.cardId];
         
-        // We re-use all our existing CSS classes from the archive
         const cardElement = document.createElement('div');
         cardElement.classList.add('card-in-grid');
         cardElement.classList.add(`rarity-${cardData.rarity}`);
         
-        const imgPath = getCardImagePath(card.cardId, card.variant);
+        const imgPath = getCardImagePath(card.cardId, card.art);
 
-        // We use a simplified HTML, no count or drag
+        // --- Handle Variants ---
+        let newLabelHTML = '';
+        if (card.isNew) {
+            newLabelHTML = '<div class="new-label">NEW!</div>';
+        }
+        
+        let foilOverlayHTML = '';
+        if (card.foil === 'foil') {
+            foilOverlayHTML = '<div class="foil-overlay"></div>';
+        }
+
+        let variantText = '';
+        if (card.art > 0) variantText = `(Alt ${card.art})`;
+        // Foil text is redundant due to overlay
+
         cardElement.innerHTML = `
             <div class="card-image-placeholder">
                 <img src="${imgPath}" alt="${cardData.name}">
+                ${newLabelHTML}
+                ${foilOverlayHTML}
             </div>
             <div class="card-info">
                 <span class="card-name">${cardData.name}</span>
+                <span class="card-variant-label">${variantText}</span>
             </div>
         `;
         
         grid.appendChild(cardElement);
     });
 
-    // 3. Show the modal
     modal.style.display = 'flex';
 }
 
@@ -854,54 +900,78 @@ function hidePackModal() {
 // --- 4. PACK OPENING LOGIC ---
 
 /**
- * Opens a pack, generates cards, and shows the reveal modal.
- * @param {string} packType - The key for the pack (e.g., "basic", "standard")
+ * Opens a pack, generates cards with variants, and shows the reveal modal.
+ * @param {string} packType - The key for the pack (e.g., "basic")
  */
 function openPack(packType) {
-    // Step 1: Check if player has this pack
-    if (gameState.player.packsInventory[packType] <= 0) {
-        console.warn(`Attempted to open pack "${packType}" with 0 in inventory.`);
-        return; // Stop the function
-    }
+    if (gameState.player.packsInventory[packType] <= 0) return;
 
-    // Step 2: Subtract the pack from inventory
     gameState.player.packsInventory[packType] -= 1;
-    
     console.log(`Opening pack: ${packType}`);
 
-    // Get the rules for this pack type from our loaded data
     const packRules = allPacksData[packType];
-    if (!packRules) {
-        console.error(`No rules found for pack type: ${packType}`);
-        return;
+    if (!packRules) return;
+
+    const newCards = []; // An array to hold the 3 new cards
+    const cardsPerPack = 3;
+    
+    // Get current progression stats
+    const packs = gameState.player.packsOpened;
+    const uniques = gameState.player.uniquesOwned; // Use the stored value
+
+    // --- Check Unlock Status ---
+    const foilUnlocked = packs >= UNLOCK_GOALS.FOIL.value;
+    const alt1Unlocked = uniques >= UNLOCK_GOALS.ALT_ART_1.value;
+    const alt2Unlocked = uniques >= UNLOCK_GOALS.ALT_ART_2.value;
+
+    let artChances = VARIANT_RATES.ART_CHANCES.LOCKED;
+    if (alt2Unlocked) {
+        artChances = VARIANT_RATES.ART_CHANCES.ALT_2_UNLOCKED;
+    } else if (alt1Unlocked) {
+        artChances = VARIANT_RATES.ART_CHANCES.ALT_1_UNLOCKED;
     }
-
-    const newCards = []; // An array to hold the cards we get
-    const cardsPerPack = 3; 
-
+    
+    // --- Generate 3 Cards ---
     for (let i = 0; i < cardsPerPack; i++) {
+        // 1. Get Base Card (uses our new region-locked function)
         const rarity = getRandomRarity(packRules);
         const cardId = getRandomCardOfRarity(rarity);
-        const variant = "normal"; // We'll add foils/alts later
-        newCards.push({ cardId: cardId, variant: variant });
+
+        // 2. Check if it's "NEW!" (must be done *before* adding)
+        const isNew = isCardIdNew(cardId);
+
+        // 3. Roll for Foil
+        let foilType = "normal";
+        if (foilUnlocked && (Math.random() * 100) < VARIANT_RATES.FOIL_CHANCE) {
+            foilType = "foil";
+        }
+
+        // 4. Roll for Art
+        let artType = 0; // Default to base
+        const artRoll = Math.random() * 100;
+        if (artRoll < artChances[2]) { // Alt 2
+            artType = 2;
+        } else if (artRoll < (artChances[1] + artChances[2])) { // Alt 1
+            artType = 1;
+        }
+        
+        // 5. Add to our list
+        newCards.push({ cardId, art: artType, foil: foilType, isNew });
     }
 
-    // Add cards to inventory
-    addCardsToInventory(newCards);
+    // --- Add to Inventory & Save ---
+    // We pass just the card data, not the 'isNew' flag
+    const cardsToAdd = newCards.map(c => ({ cardId: c.cardId, art: c.art, foil: c.foil }));
+    addCardsToInventory(cardsToAdd);
 
-    // Update player progress
-    gameState.player.packsOpened += 1;
+    gameState.player.packsOpened += 1; // Increment *after* adding
     
-    // Save the game
     saveState();
-
-    // Update the UI (this will refresh pack counts *behind* the modal)
-    updateUI();
-
-    // Log the results for testing
+    updateUI(); // Refresh background UI (pack counts, archive)
+    
     console.log("Opened pack and received:", newCards);
-
-    // **** NEW: Show the modal instead of an alert ****
+    
+    // Show the modal with all info (including 'isNew')
     showPackModal(newCards);
 }
 
@@ -1911,60 +1981,58 @@ function clearConverterSelection() {
  */
 function updateConverterUI() {
     const grid = document.getElementById('converter-grid');
-    if (!grid) return; // Not on the right panel
+    if (!grid) return; 
 
-    grid.innerHTML = ''; // Clear the grid
-
-    // Find all cards in inventory with more than 1 copy
+    grid.innerHTML = '';
     const duplicates = gameState.inventory.cards.filter(card => card.count > 1);
 
     duplicates.forEach(card => {
         const cardData = allCardsData[card.cardId];
-        if (!cardData) return; // Skip if data is missing
+        if (!cardData) return;
 
-        // Check if this card is in our current selection
         const selectedEntry = conversionSelection.find(c => 
-            c.cardId === card.cardId && 
-            c.art === card.art &&
-            c.foil === card.foil
+            c.cardId === card.cardId && c.art === card.art && c.foil === card.foil
         );
         
         const cardElement = document.createElement('div');
         cardElement.classList.add('card-in-grid');
         cardElement.classList.add(`rarity-${cardData.rarity}`);
         
-        // We'll add a visual 'foil' class here in Step 2
-        
-        if (selectedEntry) {
-            cardElement.classList.add('selected'); // Highlight if selected
-        }
+        if (selectedEntry) cardElement.classList.add('selected');
 
         const imgPath = getCardImagePath(card.cardId, card.art);
         const availableCount = card.count - 1;
         const selectedCount = selectedEntry ? selectedEntry.count : 0;
 
-        // We'll add (Foil) or (Alt) to the name in Step 2
-        let displayName = cardData.name; 
+        // --- Handle Variants ---
+        let foilOverlayHTML = '';
+        if (card.foil === 'foil') {
+            foilOverlayHTML = '<div class="foil-overlay"></div>';
+        }
         
+        let variantText = '';
+        if (card.foil === 'foil') variantText += "Foil";
+        if (card.art > 0) variantText += ` (Alt ${card.art})`;
+
         cardElement.innerHTML = `
             <div class="card-image-placeholder">
-                <img src="${imgPath}" alt="${displayName}">
+                <img src="${imgPath}" alt="${cardData.name}">
+                ${foilOverlayHTML}
             </div>
             <div class="card-info">
-                <span class="card-name">${displayName}</span>
+                <span class="card-name">${cardData.name}</span>
                 <span class="card-count">x(${selectedCount}/${availableCount})</span>
             </div>
+            <div class="card-variant-label">${variantText}</div>
         `;
         
-        // Add click listener
         cardElement.addEventListener('click', () => {
             toggleCardForConversion(card.cardId, card.art, card.foil);
         });
         
         grid.appendChild(cardElement);
     });
-
-    // After drawing the grid, update the summary (points, reward)
+    
     updateConversionSummary();
 }
 
