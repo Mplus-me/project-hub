@@ -832,3 +832,67 @@ h1, h2 {
     75% { transform: translateX(-5px) rotate(-5deg); }
     100% { transform: translateX(0); }
 }
+
+/* --- 20. Pack Opening Modal Styles --- */
+
+/* The full-screen, semi-transparent background */
+.modal-overlay {
+    position: fixed; /* Glued to the viewport */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(61, 64, 91, 0.7); /* Our dark blue, 70% transparent */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* On top of everything */
+}
+
+/* The modal window itself */
+.modal-window {
+    background-color: #F4F1DE; /* Parchment */
+    padding: 20px;
+    border-radius: 10px;
+    border: 3px solid #C9C1A5;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+.modal-window h2 {
+    color: #D95525; /* Rust */
+    margin-top: 0;
+}
+
+/* We re-use .card-grid, but we want 3 columns */
+#pack-reveal-grid {
+    grid-template-columns: repeat(3, 1fr);
+    margin-top: 15px;
+    margin-bottom: 20px;
+}
+
+/* Style for the "Awesome!" button */
+.modal-close-button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.modal-close-button img {
+    /* This is our placeholder style */
+    width: 150px;
+    height: 50px;
+    background-color: #88a236; /* Mossy Green */
+    border: 2px solid #6d832b;
+    border-radius: 8px;
+    transition: transform 0.1s ease;
+}
+.modal-close-button:hover img {
+    transform: scale(1.05);
+}
+.modal-close-button:active img {
+    transform: scale(0.95);
+}
