@@ -870,11 +870,9 @@ function showPackModal(newCards) {
         // Foil text is redundant due to overlay
 
         cardElement.innerHTML = `
-            <div class="card-image-placeholder">
+            ${newLabelHTML} <div class="card-image-placeholder">
                 <img src="${imgPath}" alt="${cardData.name}">
-                ${newLabelHTML}
-                ${foilOverlayHTML}
-            </div>
+                ${foilOverlayHTML} </div>
             <div class="card-info">
                 <span class="card-name">${cardData.name}</span>
                 <span class="card-variant-label">${variantText}</span>
