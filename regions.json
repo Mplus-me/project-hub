@@ -1,0 +1,38 @@
+{
+  "riverbed": {
+    "name": "Riverbed",
+    "unlock": { "type": "packs", "value": 0 }
+  },
+  "grassland": {
+    "name": "Grassland",
+    "unlock": { "type": "packs", "value": 5 }
+  },
+  "forest": {
+    "name": "Forest",
+    "unlock": { "type": "packs", "value": 15 }
+  },
+  "coast": {
+    "name": "Coast",
+    "unlock": { "type": "unique", "value": 10 }
+  },
+  "desert": {
+    "name": "Desert",
+    "unlock": { "type": "packs", "value": 30 }
+  },
+  "mountain": {
+    "name": "Mountain",
+    "unlock": { "type": "unique", "value": 25 }
+  },
+  "cave": {
+    "name": "Cave",
+    "unlock": { "type": "packs", "value": 50 }
+  },
+  "volcanic": {
+    "name": "Volcanic",
+    "unlock": { "type": "unique", "value": 40 }
+  },
+  "cosmic": {
+    "name": "Cosmic",
+    "unlock": { "type": "unique", "value": 60 }
+  }
+}
