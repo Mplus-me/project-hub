@@ -28,13 +28,13 @@
 }
 
 body {
-    font-family: 'Georgia', serif;
+    font-family: var(--body-font);
     background-color: var(--primary-bg-color); /* A warm, parchment-like color */
     color: var(--body-txt-color); /* A dark, earthy blue */
 }
 
 h1, h2 {
-    font-family: 'Verdana', sans-serif;
+    font-family: var(--header-font);
     color: var(--header-txt-color); /* A cozy terracotta/rust color */
     margin-bottom: 15px;
 }
@@ -280,7 +280,7 @@ h1, h2 {
 .game-button {
     background-color: var(--header-txt-color); /* Rust */
     color: #fff;
-    font-family: 'Verdana', sans-serif;
+    font-family: var(--header-font);
     border: none;
     padding: 8px 12px;
     border-radius: 5px;
@@ -374,7 +374,7 @@ h1, h2 {
     border: 2px solid #C9C1A5;
     border-radius: 8px;
     padding: 5px 10px;
-    font-family: 'Verdana', sans-serif;
+    font-family: var(--header-font);
     color: var(--body-txt-color);
     text-align: center;
 }
@@ -461,7 +461,7 @@ h1, h2 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-family: 'Verdana', sans-serif;
+    font-family: var(--header-font);
 }
 
 #converter-points, #converter-reward {
@@ -625,7 +625,7 @@ h1, h2 {
 
 /* The "Unique Rocks" text in the Archive */
 .stat-subtitle {
-    font-family: 'Verdana', sans-serif;
+    font-family: var(--header-font);
     font-size: 16px;
     color: #88a236; /* Mossy Green - feels like an achievement */
     font-weight: bold;
@@ -706,7 +706,7 @@ h1, h2 {
     cursor: pointer;
     text-align: center;
     transition: background-color 0.2s ease, transform 0.2s ease;
-    font-family: 'Verdana', sans-serif;
+    font-family: var(--header-font);
     font-size: 14px;
     color: var(--body-txt-color);
     font-weight: bold;
@@ -1001,10 +1001,10 @@ h1, h2 {
 
 /* New style for destructive buttons */
 .game-button.danger-button {
-    background-color: #e74c3c; /* A strong red */
+    background-color: #a40b0b;
 }
 .game-button.danger-button:hover {
-    background-color: #c0392b; /* A darker red */
+    background-color: #760A0A;
 }
 
 /* Container for the delete button */
@@ -1040,6 +1040,6 @@ h1, h2 {
     padding: 8px;
     border-radius: 5px;
     border: 2px solid #C9C1A5;
-    font-family: 'Verdana', sans-serif;
+    font-family: var(--header-font);
     width: 200px;
 }
