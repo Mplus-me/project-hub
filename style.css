@@ -1,3 +1,25 @@
+/* --- Variables & Style --- */
+
+:root {
+
+--primary-bg-color: #004D40; /* Pine teal */
+--primary-ac-color: #BF360C; /* Rusty spice */
+--secondary-bg-color: #880E4F; /* Dark raspberry */
+--secondary-ac-color: #49302B; /* Deep mocha */
+--header-txt-color: #E0DAB9; /* Sand dune */
+--body-txt-color: #e0dab9; /* Sand dune */
+--hidden-txt-color: #D69147; /* Golden apricot */
+
+--card-rarity-1: #C9C1A5;
+--card-rarity-2: #88a236;
+--card-rarity-3: #9b59b6;
+--card-rarity-4: #f39c12;
+--card-rarity-5: #34e7e4;
+
+--body-font: 'Georgia', serif;
+--header-font: 'Verdana', sans-serif;
+}
+
 /* --- Basic Setup & Cozy Theme --- */
 * {
     box-sizing: border-box;
@@ -7,13 +29,13 @@
 
 body {
     font-family: 'Georgia', serif;
-    background-color: #F4F1DE; /* A warm, parchment-like color */
-    color: #3D405B; /* A dark, earthy blue */
+    background-color: var(--primary-bg-color); /* A warm, parchment-like color */
+    color: var(--body-txt-color); /* A dark, earthy blue */
 }
 
 h1, h2 {
     font-family: 'Verdana', sans-serif;
-    color: #D95525; /* A cozy terracotta/rust color */
+    color: var(--header-txt-color); /* A cozy terracotta/rust color */
     margin-bottom: 15px;
 }
 
@@ -103,12 +125,12 @@ h1, h2 {
 
 /* --- Rarity Border Colors --- */
 /* We use the rarity from cards.json to color the borders */
-.card-in-grid.rarity-common { border-color: #C9C1A5; }
-.card-in-grid.rarity-uncommon { border-color: #88a236; } /* Mossy Green */
-.card-in-grid.rarity-rare { border-color: #9b59b6; } /* Amethyst Purple */
+.card-in-grid.rarity-common { border-color: var(--card-rarity-1; }
+.card-in-grid.rarity-uncommon { border-color: var(--card-rarity-1); } /* Mossy Green */
+.card-in-grid.rarity-rare { border-color: var(--card-rarity-3); } /* Amethyst Purple */
 
-.card-in-grid.rarity-mythic { border-color: #f39c12; } /* Gold/Orange */
-.card-in-grid.rarity-legendary { border-color: #34e7e4; } /* Bright Cyan/Diamond */
+.card-in-grid.rarity-mythic { border-color: var(--card-rarity-4); } /* Gold/Orange */
+.card-in-grid.rarity-legendary { border-color: var(--card-rarity-5); } /* Bright Cyan/Diamond */
 .card-in-grid.rarity-special {
     border-image: linear-gradient(45deg, #f39c12, #e74c3c, #9b59b6, #34e7e4) 1;
 }
@@ -150,7 +172,7 @@ h1, h2 {
 
 .card-name {
     font-size: 13px;
-    color: #3D405B;
+    color: var(--body-txt-color);
     /* Prevents long names from breaking the layout */
     white-space: nowrap;
     overflow: hidden;
@@ -160,7 +182,7 @@ h1, h2 {
 .card-count {
     font-size: 14px;
     font-weight: bold;
-    color: #D95525; /* Our cozy rust color */
+    color: var(--header-txt-color);
     margin-left: 5px;
     
     /* Adds a nice little circle background */
@@ -256,7 +278,7 @@ h1, h2 {
 /* --- 7. Generic Button Style --- */
 /* We can reuse this for all our buttons */
 .game-button {
-    background-color: #D95525; /* Rust */
+    background-color: var(--header-txt-color); /* Rust */
     color: #fff;
     font-family: 'Verdana', sans-serif;
     border: none;
@@ -273,7 +295,7 @@ h1, h2 {
 
 .game-button:disabled {
     background-color: #C9C1A5; /* Grayed out */
-    color: #F4F1DE;
+    color: var(--primary-bg-color);
     cursor: not-allowed;
 }
 
@@ -303,7 +325,7 @@ h1, h2 {
 }
 
 .expedition-slot {
-    background-color: #F4F1DE; /* Light parchment */
+    background-color: var(--primary-bg-color); /* Light parchment */
     border: 2px solid #C9C1A5;
     border-radius: 8px;
     padding: 15px;
@@ -315,7 +337,7 @@ h1, h2 {
 }
 
 .expedition-slot h4 {
-    color: #3D405B;
+    color: var(--body-txt-color);
     margin-bottom: 5px;
 }
 
@@ -330,7 +352,7 @@ h1, h2 {
 .expedition-slot .timer {
     font-size: 22px;
     font-weight: bold;
-    color: #D95525; /* Rust color */
+    color: var(--header-txt-color); /* Rust color */
     margin-bottom: 10px;
 }
 
@@ -353,14 +375,14 @@ h1, h2 {
     border-radius: 8px;
     padding: 5px 10px;
     font-family: 'Verdana', sans-serif;
-    color: #3D405B;
+    color: var(--body-txt-color);
     text-align: center;
 }
 
 .pack-display .pack-count {
     font-size: 20px;
     font-weight: bold;
-    color: #D95525; /* Rust */
+    color: var(--header-txt-color); /* Rust */
 }
 
 .pack-display .pack-name {
@@ -401,7 +423,7 @@ h1, h2 {
 }
 
 .minigame-container h4 {
-    color: #3D405B;
+    color: var(--body-txt-color);
     margin-bottom: 5px;
 }
 
@@ -431,7 +453,7 @@ h1, h2 {
 
 /* --- 12. Duplicate Converter Styles --- */
 #converter-summary {
-    background-color: #F4F1DE;
+    background-color: var(--primary-bg-color);
     border: 2px solid #C9C1A5;
     border-radius: 8px;
     padding: 15px;
@@ -445,7 +467,7 @@ h1, h2 {
 #converter-points, #converter-reward {
     font-size: 16px;
     font-weight: bold;
-    color: #3D405B;
+    color: var(--body-txt-color);
 }
 
 #converter-reward {
@@ -616,7 +638,7 @@ h1, h2 {
 /* The "Packs Opened" text in the Packs panel */
 .quiet-stat {
     font-size: 12px;
-    color: #8e8e8e; /* Muted gray */
+    color: var(--hidden-txt-color) /* Muted gray */
     font-style: italic;
     margin-bottom: 10px;
 }
@@ -641,7 +663,7 @@ h1, h2 {
 
 .sort-container {
     font-size: 14px;
-    color: #3D405B;
+    color: var(--body-txt-color);
 }
 
 /* This is our cozy-themed select dropdown */
@@ -652,7 +674,7 @@ h1, h2 {
     border: 2px solid #C9C1A5;
     border-radius: 5px;
     padding: 3px 5px;
-    color: #3D405B;
+    color: var(--body-txt-color);
 }
 
 /* Mobile tweak for the archive header */
@@ -677,7 +699,7 @@ h1, h2 {
 
 /* Style for the big game-selection buttons */
 .minigame-button {
-    background-color: #F4F1DE; /* Light parchment */
+    background-color: var(--primary-bg-color); /* Light parchment */
     border: 2px solid #C9C1A5;
     border-radius: 8px;
     padding: 15px;
@@ -686,7 +708,7 @@ h1, h2 {
     transition: background-color 0.2s ease, transform 0.2s ease;
     font-family: 'Verdana', sans-serif;
     font-size: 14px;
-    color: #3D405B;
+    color: var(--body-txt-color);
     font-weight: bold;
 }
 .minigame-button:hover {
@@ -720,7 +742,7 @@ h1, h2 {
 /* We re-use this class but now it's a child of #minigame-stages */
 .minigame-container { 
     display: none; /* Hide all individual games */
-    background-color: #F4F1DE;
+    background-color: var(--primary-bg-color);
     border: 2px solid #C9C1A5;
     border-radius: 8px;
     padding: 15px;
@@ -758,7 +780,7 @@ h1, h2 {
     margin: 0;
     font-size: 14px;
     font-weight: bold;
-    color: #3D405B;
+    color: var(--body-txt-color);
 }
 
 #sifting-find-list li {
@@ -774,7 +796,7 @@ h1, h2 {
 #sifting-timer {
     font-size: 18px;
     font-weight: bold;
-    color: #3D405B;
+    color: var(--body-txt-color);
     transition: color 0.3s ease, transform 0.3s ease;
 }
 #sifting-timer.danger {
@@ -852,7 +874,7 @@ h1, h2 {
 
 /* The modal window itself */
 .modal-window {
-    background-color: #F4F1DE; /* Parchment */
+    background-color: var(--primary-bg-color); /* Parchment */
     padding: 20px;
     border-radius: 10px;
     border: 3px solid #C9C1A5;
@@ -863,7 +885,7 @@ h1, h2 {
 }
 
 .modal-window h2 {
-    color: #D95525; /* Rust */
+    color: var(--header-txt-color); /* Rust */
     margin-top: 0;
 }
 
@@ -973,7 +995,7 @@ h1, h2 {
 .card-variant-label {
     font-size: 10px;
     font-style: italic;
-    color: #D95525; /* Rust */
+    color: var(--body-txt-color); /* Rust */
     margin-left: 5px;
 }
 
