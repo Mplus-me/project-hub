@@ -1,0 +1,129 @@
+:root {
+    --primary-bg: #004D40; /* Pine teal */
+    --card-bg: #E0DAB9; /* Sand dune */
+    --accent-color: #BF360C; /* Rusty spice */
+    --text-color: #49302B; /* Deep mocha */
+    --header-font: 'Verdana', sans-serif;
+    --body-font: 'Georgia', serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--primary-bg);
+    color: var(--card-bg);
+    font-family: var(--body-font);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* --- Header --- */
+.hub-header {
+    text-align: center;
+    padding: 40px 20px;
+    border-bottom: 4px solid var(--accent-color);
+    background-color: rgba(0,0,0,0.2);
+}
+
+.hub-header h1 {
+    font-family: var(--header-font);
+    font-size: 2.5rem;
+    color: var(--card-bg);
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 0px var(--text-color);
+}
+
+/* --- Project Grid --- */
+.project-container {
+    flex-grow: 1;
+    padding: 40px;
+    display: grid;
+    /* Responsive Grid: Fits as many 300px cards as possible */
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* --- Project Cards --- */
+.project-card {
+    background-color: var(--card-bg);
+    border: 3px solid #C9C1A5;
+    border-radius: 12px;
+    overflow: hidden;
+    text-decoration: none; /* Remove underline from link */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+}
+
+.project-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    border-color: var(--accent-color);
+}
+
+.card-image {
+    height: 150px;
+    background-color: #dcd6b6;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    border-bottom: 2px dashed #bcae88;
+}
+
+.card-content {
+    padding: 20px;
+}
+
+.card-content h2 {
+    font-family: var(--header-font);
+    color: var(--accent-color);
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+}
+
+.card-content p {
+    color: var(--text-color);
+    font-size: 0.95rem;
+    line-height: 1.4;
+    margin-bottom: 15px;
+}
+
+/* --- Tags --- */
+.tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tag {
+    background-color: var(--primary-bg);
+    color: var(--card-bg);
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: var(--header-font);
+}
+
+/* --- Footer --- */
+.hub-footer {
+    text-align: center;
+    padding: 20px;
+    background-color: rgba(0,0,0,0.2);
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.5);
+}
+
+/* --- Mobile Fix --- */
+@media (max-width: 600px) {
+    .hub-header h1 { font-size: 1.8rem; }
+    .project-container { padding: 20px; }
+}
